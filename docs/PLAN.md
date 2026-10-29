@@ -204,7 +204,9 @@ başlangıçta `SQLModel.metadata.create_all` yeterli.
 
 ## 5. API Tasarımı
 
-Tüm uçlar `/api` altında. Yazma işlemleri `X-Admin-Key` başlığı ile korunur (değer `.env`'de).
+Tüm uçlar `/api` altında. Yazma işlemleri `X-Admin-Key` başlığı ile korunur (değer `.env`'de; `secrets.compare_digest`
+ile karşılaştırılır). `ADMIN_API_KEY` boşsa yazma uçları tamamen kapalıdır (403). Bir test, OpenAPI şemasındaki her
+yazma ucunu anahtarsız çağırıp 401 döndüğünü doğrular; yeni bir uç korumasız eklenirse test kırılır.
 
 | Metot | Yol | Açıklama |
 |---|---|---|
@@ -354,7 +356,8 @@ Her adım küçük, kendi başına çalışır ve commit'lenebilir. Her adımın
   _Bitti:_ testlerde 429 senaryosu, kota dolması ve max deneme davranışı doğrulanır.
 - [x] **Adım 7: Zamanlayıcı** — `scheduler.py` + `lifespan`: fetch işi ve özet worker'ı; `/api/queue/status`.
   _Bitti:_ uygulama kendi kendine haber toplayıp limitler içinde özetler.
-- [ ] **Adım 8: Yazma uçları** — kaynak ekle/sil/güncelle/yenile, yeniden özetle; admin anahtarı; CORS.
+- [x] **Adım 8: Yazma uçları** — kaynak ekle/sil/güncelle/yenile, yeniden özetle; admin anahtarı; CORS.
+  `sources.yaml` artık sadece boş veritabanında (ilk kurulum) okunuyor; sonrasında kaynakların yönetim yeri API.
   _Bitti:_ korumalı uçlar anahtarsız 401 döner.
 
 ### Faz 3 — Frontend

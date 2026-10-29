@@ -5,6 +5,7 @@ os.environ["DATABASE_URL"] = "sqlite://"
 os.environ["SCHEDULER_ENABLED"] = "false"
 # Environment variables win over backend/.env, so tests never see the real API key.
 os.environ["GEMINI_API_KEY"] = ""
+os.environ["ADMIN_API_KEY"] = "test-admin-key"
 
 from collections.abc import Iterator  # noqa: E402
 

@@ -3,7 +3,7 @@ fields (like the full extracted `content`) can never leak into a response."""
 
 from datetime import datetime
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, HttpUrl
 from sqlmodel import SQLModel
 
 from app.models import SummaryStatus
@@ -14,6 +14,24 @@ class Page[T](BaseModel):
     total: int
     page: int
     size: int
+
+
+class FeedCreate(BaseModel):
+    url: HttpUrl
+    name: str | None = Field(default=None, min_length=1, max_length=100)  # default: feed title
+
+
+class FeedUpdate(BaseModel):
+    name: str | None = Field(default=None, min_length=1, max_length=100)
+    is_active: bool | None = None
+
+
+class FeedRefreshResult(BaseModel):
+    new_articles: int
+    not_modified: bool
+    error: str | None
+    queued_for_summary: int
+    skipped: int
 
 
 class FeedRead(SQLModel):

@@ -59,15 +59,15 @@ def process_new_articles(
     limit: int = 50,
     delay: float = REQUEST_DELAY_SECONDS,
     min_chars: int | None = None,
+    feed_id: int | None = None,
 ) -> Counter[SummaryStatus]:
-    """Extract text for up to `limit` new articles, oldest first. Returns counts per new status."""
+    """Extract text for up to `limit` new articles (optionally of one feed), oldest first.
+    Returns counts per new status."""
     min_chars = min_chars if min_chars is not None else settings.summary_min_chars
-    articles = session.exec(
-        select(Article)
-        .where(Article.summary_status == SummaryStatus.NEW)
-        .order_by(col(Article.published_at))
-        .limit(limit)
-    ).all()
+    query = select(Article).where(Article.summary_status == SummaryStatus.NEW)
+    if feed_id is not None:
+        query = query.where(Article.feed_id == feed_id)
+    articles = session.exec(query.order_by(col(Article.published_at)).limit(limit)).all()
 
     counts: Counter[SummaryStatus] = Counter()
     for index, article in enumerate(articles):

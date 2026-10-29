@@ -47,6 +47,8 @@ uv run python -m scripts.run_queue       # summarize and SAVE, max 2 requests (-
   `lsof -nP -iTCP -sTCP:LISTEN | grep python`; use `SCHEDULER_ENABLED=false` for API-only runs.
 - Background jobs are synchronous and run in threads; each job opens its own DB session. SQLite runs in WAL mode.
 - API responses use dedicated read schemas; never expose `Article.content` (full extracted text) to the client.
+- Every write endpoint (POST/PATCH/PUT/DELETE) must declare `dependencies=[AdminDep]`; `test_admin_api.py` fails otherwise.
+- `sources.yaml` only seeds an empty database. After that, feeds are managed through the API.
 - The UI shows summaries and links to the original source, never the full scraped text.
 
 ## Conventions

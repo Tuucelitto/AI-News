@@ -2,14 +2,17 @@ from datetime import timedelta
 from typing import Annotated
 
 from fastapi import APIRouter, HTTPException, Query
+from fastapi import status as http_status  # `status` is also a query parameter below
 from sqlalchemy.orm import defer
 from sqlmodel import col, func, or_, select
 
-from app.api.deps import SessionDep
+from app.api.deps import AdminDep, SessionDep
 from app.models import Article, Feed, SummaryStatus, utc_now
 from app.schemas import ArticleDetail, ArticleListItem, Page
 
 router = APIRouter(prefix="/articles", tags=["articles"])
+
+RESUMMARIZABLE = {SummaryStatus.DONE, SummaryStatus.FAILED, SummaryStatus.SKIPPED}
 
 
 @router.get("")
@@ -65,13 +68,34 @@ def list_articles(
     return Page(items=items, total=total, page=page, size=size)
 
 
+@router.post("/{article_id}/resummarize", dependencies=[AdminDep])
+def resummarize_article(article_id: int, session: SessionDep) -> ArticleDetail:
+    """Put a finished, failed or skipped article back into the summary queue."""
+    article = session.get(Article, article_id)
+    if article is None:
+        raise HTTPException(http_status.HTTP_404_NOT_FOUND, "Article not found")
+    if article.summary_status not in RESUMMARIZABLE:
+        raise HTTPException(
+            http_status.HTTP_409_CONFLICT,
+            f"Article is {article.summary_status.value}, not finished",
+        )
+
+    article.summary_status = SummaryStatus.PENDING
+    article.summary_attempts = 0
+    article.summary_error = None
+    article.next_attempt_at = None
+    session.add(article)
+    session.commit()
+    return get_article(article_id, session)
+
+
 @router.get("/{article_id}")
 def get_article(article_id: int, session: SessionDep) -> ArticleDetail:
     row = session.exec(
         select(Article, Feed.name).join(Feed).where(Article.id == article_id)
     ).first()
     if row is None:
-        raise HTTPException(status_code=404, detail="Article not found")
+        raise HTTPException(http_status.HTTP_404_NOT_FOUND, "Article not found")
 
     article, feed_name = row
     return ArticleDetail.model_validate(article, update={"feed_name": feed_name})

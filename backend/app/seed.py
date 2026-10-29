@@ -14,17 +14,15 @@ def load_sources(path: Path = SOURCES_FILE) -> list[dict[str, str]]:
 
 
 def seed_feeds(session: Session, path: Path = SOURCES_FILE) -> int:
-    """Add feeds from sources.yaml that are not in the database yet.
+    """On first start, when there are no feeds at all, add the feeds from sources.yaml.
 
-    Existing feeds are left untouched, so this is safe to run on every startup.
+    After that the database (managed through the API) is the source of truth; otherwise
+    a feed deleted through the API would come back on the next startup.
     Returns the number of feeds added.
     """
-    existing_urls = set(session.exec(select(Feed.url)).all())
-    new_feeds = [
-        Feed(name=source["name"], url=source["url"])
-        for source in load_sources(path)
-        if source["url"] not in existing_urls
-    ]
+    if session.exec(select(Feed.id).limit(1)).first() is not None:
+        return 0
+    new_feeds = [Feed(name=source["name"], url=source["url"]) for source in load_sources(path)]
     session.add_all(new_feeds)
     session.commit()
     return len(new_feeds)

@@ -2,7 +2,8 @@
 
 from collections.abc import Sequence
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
+from email.utils import format_datetime
 from typing import Any
 
 from app.services.summarizer import ArticleInput, ArticleSummary
@@ -50,3 +51,18 @@ class FakeSummarizer:
             )
             for i in chosen
         }
+
+
+def recent_rss(title: str, *links: str) -> str:
+    """A minimal RSS feed whose items are dated one hour ago, so they are always
+    within FETCH_MAX_AGE_HOURS no matter when the tests run."""
+    published = format_datetime(datetime.now(UTC) - timedelta(hours=1), usegmt=True)
+    items = "".join(
+        f"<item><title>Story {i}</title><link>{link}</link><guid>{link}</guid>"
+        f"<pubDate>{published}</pubDate><description>Short teaser.</description></item>"
+        for i, link in enumerate(links)
+    )
+    return (
+        f'<?xml version="1.0"?><rss version="2.0"><channel><title>{title}</title>'
+        f"<link>https://news.example.com</link>{items}</channel></rss>"
+    )
