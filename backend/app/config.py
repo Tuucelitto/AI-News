@@ -8,14 +8,15 @@ class Settings(BaseSettings):
 
     # Gemini
     gemini_api_key: str = ""
-    gemini_model: str = "gemini-flash-latest"
-    gemini_rpm: int = 5
-    gemini_daily_limit: int = 100
+    gemini_model: str = "gemini-3.8-flash"
+    gemini_rpm: int = 4
+    gemini_daily_limit: int = 18
 
     # Summarization
     summary_min_chars: int = 500
     summary_max_input_chars: int = 12000
     summary_max_attempts: int = 5
+    summary_batch_size: int = 5  # articles per Gemini request
 
     # Fetching: entries published longer ago than this are ignored.
     fetch_max_age_hours: int = 48

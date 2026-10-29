@@ -23,6 +23,7 @@ uv run pytest                 # tests
 uv run ruff check . && uv run ruff format .
 uv run python -m scripts.check_sources   # check every feed in sources.yaml
 uv run python -m scripts.fetch_now       # fetch all feeds once into the database
+uv run python -m scripts.try_summary     # summarize one batch, print only (uses 1 Gemini request!)
 
 # frontend
 # (added in step 9a)
