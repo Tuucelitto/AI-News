@@ -62,8 +62,8 @@ export const useSettingsStore = defineStore('settings', () => {
     document.documentElement.classList.toggle('dark', dark)
   }
 
-  function cycleTheme(): void {
-    theme.value = THEMES[(THEMES.indexOf(theme.value) + 1) % THEMES.length]!
+  function setTheme(value: Theme): void {
+    theme.value = value
   }
 
   watch(theme, (value) => {
@@ -74,5 +74,5 @@ export const useSettingsStore = defineStore('settings', () => {
   window.matchMedia?.('(prefers-color-scheme: dark)').addEventListener('change', applyTheme)
   applyTheme()
 
-  return { adminKey, hasAdminKey, saveAdminKey, forgetAdminKey, theme, cycleTheme }
+  return { adminKey, hasAdminKey, saveAdminKey, forgetAdminKey, theme, setTheme }
 })

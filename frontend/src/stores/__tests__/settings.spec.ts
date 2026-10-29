@@ -58,24 +58,21 @@ describe('settings store', () => {
   })
 
   describe('theme', () => {
-    it('cycles system → light → dark and applies the dark class', async () => {
+    it('applies the dark class and remembers the choice', async () => {
       const settings = useSettingsStore()
       expect(settings.theme).toBe('system')
 
-      settings.cycleTheme()
+      settings.setTheme('dark')
       await nextTick()
-      expect(settings.theme).toBe('light')
-      expect(document.documentElement.classList.contains('dark')).toBe(false)
-
-      settings.cycleTheme()
-      await nextTick()
-      expect(settings.theme).toBe('dark')
       expect(document.documentElement.classList.contains('dark')).toBe(true)
       expect(localStorage.getItem(THEME_STORAGE)).toBe('dark')
 
-      settings.cycleTheme()
+      settings.setTheme('light')
       await nextTick()
-      expect(settings.theme).toBe('system')
+      expect(document.documentElement.classList.contains('dark')).toBe(false)
+
+      settings.setTheme('system')
+      await nextTick()
       expect(localStorage.getItem(THEME_STORAGE)).toBeNull() // system is the default
     })
 
