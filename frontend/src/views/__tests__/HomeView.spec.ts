@@ -82,6 +82,8 @@ describe('HomeView', () => {
   })
 
   it('pages forward through the URL', async () => {
+    // jsdom has no scrolling; the view scrolls to the top after a page change.
+    const scrollTo = vi.spyOn(window, 'scrollTo').mockImplementation(() => {})
     const { wrapper, router } = await mountHome()
 
     await wrapper
@@ -91,6 +93,8 @@ describe('HomeView', () => {
     await flushPromises()
 
     expect(router.currentRoute.value.query).toEqual({ page: '2' })
+    expect(scrollTo).toHaveBeenCalledWith({ top: 0 })
+    scrollTo.mockRestore()
   })
 
   it('shows an error with a retry button', async () => {

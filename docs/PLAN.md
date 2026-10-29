@@ -211,7 +211,7 @@ yazma ucunu anahtarsız çağırıp 401 döndüğünü doğrular; yeni bir uç k
 | Metot | Yol | Açıklama |
 |---|---|---|
 | GET | `/api/health` | Sağlık kontrolü |
-| GET | `/api/articles` | Liste: `page`, `size`, `feed_id`, `status`, `q` (arama) |
+| GET | `/api/articles` | Liste: `page`, `size`, `feed_id`, `status`, `q` (arama), `since_hours` |
 | GET | `/api/articles/{id}` | Detay (özet, maddeler, kaynak linki) |
 | POST | `/api/articles/{id}/resummarize` 🔒 | Kuyruğa yeniden ekle |
 | GET | `/api/feeds` | Kaynak listesi |
@@ -223,6 +223,11 @@ yazma ucunu anahtarsız çağırıp 401 döndüğünü doğrular; yeni bir uç k
 
 Yanıtlar Pydantic/SQLModel "read" şemalarıyla döner (DB modeli doğrudan dışarı açılmaz; örn. `content` alanı gizli).
 Liste yanıtı: `{ items, total, page, size }`.
+
+**Arama (30 Ekim):** SQLite `LIKE` büyük/küçük harfi sadece ASCII'de yok sayıyordu ("insan" → "İnsan" bulunmuyordu).
+Her SQLite bağlantısına Python'da yazılmış `search_fold()` SQL fonksiyonu kaydedildi (`app/search.py`): metin ve sorgu
+aynı anahtara katlanır (I/İ/ı → i, aksanlar düşer). Sadece Türkçe küçük harfe çevirmek İngilizce "AI"yı "aı" yapıp
+bozacağı için katlama seçildi. Veri büyürse FTS5'e geçilebilir.
 
 ---
 
@@ -367,8 +372,11 @@ Her adım küçük, kendi başına çalışır ve commit'lenebilir. Her adımın
   _Bitti:_ uçtan uca akış tarayıcıda çalışır.
 
 ### Faz 4 — Portföy cilası
-- [ ] **Adım 10: Kalite** — Alembic değerlendirmesi, Vitest, ESLint/Prettier, yapılandırılmış loglama.
+- [x] **Adım 10: Kalite** — Alembic (açılışta otomatik migration, eski DB'leri benimseme, şema sapma testi),
+  Türkçe/İngilizce uyumlu arama. Vitest, ESLint/oxlint, Prettier Adım 9'da kuruldu.
 - [ ] **Adım 11: CI** — GitHub Actions: backend lint + test, frontend lint + type-check + build.
+  `.github/workflows/ci.yml` yazıldı ve temiz bir kopyada yerel olarak test edildi (10/10 adım; bilerek bozulan kodda
+  ilgili adımlar başarısız oluyor). Kalan: GitHub deposu açılıp push edilmesi ve ilk gerçek çalıştırma.
 - [ ] **Adım 12: Sunum** — İngilizce README (mimari diyagram, ekran görüntüleri, kurulum), isteğe bağlı Docker Compose.
 
 ---
@@ -386,3 +394,16 @@ Her adım küçük, kendi başına çalışır ve commit'lenebilir. Her adımın
 | OpenAI (~1300) ve Hugging Face (~900) feed'leri tüm arşivi içeriyor | ✅ Sadece son 48 saatte yayımlanan haberler alınır (`FETCH_MAX_AGE_HOURS=48`, kesinti payı olarak); arayüz varsayılan olarak son 24 saati gösterir, eski haberler DB'de kalır |
 | Python paket yöneticisi (uv / pip) | ✅ uv seçildi |
 | Deploy edilecek mi? | Faz 4'te karar (Render/Fly.io + statik frontend gibi) |
+
+---
+
+## 12. Gelecek güncellemeler
+
+Şimdilik kapsam dışı bırakılan ama ihtiyaç olabilecek özellikler.
+
+- **Aynı haberi gruplama:** Farklı kaynakların aynı konuyu yazan haberlerini (ör. "Gemini 4 Carbon": DeepMind,
+  Ars Technica, The Verge) tek kartta toplamak. URL tekilleştirmesi bunu yakalayamaz; başlık/özet benzerliği veya
+  embedding gerekir. 30 Ekim'de ertelendi.
+- **Yedek model notu:** Flash-Lite'ın özetlediği haberlerde "yedek modelle özetlendi" notu (özet kalitesi daha düşük olabilir).
+- **Atomik kuyruk:** Haber seçimini `UPDATE … WHERE status='pending' RETURNING` ile tek adımda yapmak; yanlışlıkla
+  iki süreç çalışsa bile aynı haber iki kez gönderilmez.

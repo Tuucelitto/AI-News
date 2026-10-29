@@ -21,6 +21,8 @@ uv sync                       # install dependencies into .venv
 uv run fastapi dev            # dev server with reload, http://localhost:8000/docs
 uv run pytest                 # tests
 uv run ruff check . && uv run ruff format .
+uv run alembic revision --autogenerate -m "..."   # after changing app/models.py (review the file!)
+uv run alembic upgrade head   # also runs automatically on app startup (app.db.init_db)
 uv run python -m scripts.check_sources   # check every feed in sources.yaml
 uv run python -m scripts.fetch_now       # fetch all feeds once into the database
 uv run python -m scripts.try_summary     # summarize one batch, print only (uses 1 Gemini request!)
@@ -31,6 +33,7 @@ npm install
 npm run dev                   # http://localhost:5173, proxies /api to 127.0.0.1:8000
 npx vitest run                # unit tests (npm run test:unit starts watch mode)
 npm run type-check && npm run lint && npm run build
+npm run lint:check && npm run format:check   # what CI runs: check only, never --fix
 ```
 
 ## Architecture rules
@@ -52,6 +55,10 @@ npm run type-check && npm run lint && npm run build
 - API responses use dedicated read schemas; never expose `Article.content` (full extracted text) to the client.
 - Every write endpoint (POST/PATCH/PUT/DELETE) must declare `dependencies=[AdminDep]`; `test_admin_api.py` fails otherwise.
 - `sources.yaml` only seeds an empty database. After that, feeds are managed through the API.
+- **Schema changes need an Alembic migration** (`backend/migrations/versions/`). Never delete the database to change
+  the schema. `test_migrations.py` fails if models and migrations drift apart. Tests themselves use `create_tables()`.
+- Search uses the `search_fold()` SQL function (`app/search.py`, registered per SQLite connection): I/İ/ı → i, accents
+  dropped. Apply it to both the column and the query.
 - The UI shows summaries and links to the original source, never the full scraped text.
 
 ## Conventions
@@ -72,6 +79,9 @@ npm run type-check && npm run lint && npm run build
   Keep `backend/.env.example` updated with every new setting (empty values).
 
 ## Testing
+
+- CI (`.github/workflows/ci.yml`) runs ruff check/format --check + pytest and npm lint:check, format:check,
+  type-check, vitest, build on every push/PR. Keep it green; it needs no secrets.
 
 - Tests must never hit the real Gemini API or real RSS feeds: use a fake summarizer client and files in `backend/tests/fixtures/`.
 - Use an in-memory SQLite database per test.
