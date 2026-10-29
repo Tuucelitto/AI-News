@@ -3,12 +3,14 @@ from typing import Annotated
 
 from fastapi import APIRouter, HTTPException, Query
 from fastapi import status as http_status  # `status` is also a query parameter below
+from sqlalchemy import String
 from sqlalchemy.orm import defer
 from sqlmodel import col, func, or_, select
 
 from app.api.deps import AdminDep, SessionDep
 from app.models import Article, Feed, SummaryStatus, utc_now
 from app.schemas import ArticleDetail, ArticleListItem, Page
+from app.search import search_fold
 
 router = APIRouter(prefix="/articles", tags=["articles"])
 
@@ -34,11 +36,13 @@ def list_articles(
     if since_hours is not None:
         filters.append(col(Article.published_at) >= utc_now() - timedelta(hours=since_hours))
     if q:
-        # autoescape makes "%" and "_" in the query match literally instead of as wildcards.
+        # Both sides are folded (İ/I/ı → i, accents dropped) so Turkish and English match;
+        # see app/search.py. autoescape makes "%" and "_" in the query match literally.
+        folded = search_fold(q)
         filters.append(
             or_(
                 *(
-                    col(field).icontains(q, autoescape=True)
+                    func.search_fold(field, type_=String).contains(folded, autoescape=True)
                     for field in (
                         Article.title,
                         Article.title_tr,

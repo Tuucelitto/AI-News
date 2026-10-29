@@ -15,7 +15,7 @@ from sqlalchemy import event  # noqa: E402
 from sqlalchemy.pool import StaticPool  # noqa: E402
 from sqlmodel import Session, create_engine  # noqa: E402
 
-from app.db import _set_sqlite_pragmas, get_session, init_db  # noqa: E402
+from app.db import configure_sqlite_connection, create_tables, get_session  # noqa: E402
 from app.main import app  # noqa: E402
 
 
@@ -26,8 +26,8 @@ def session() -> Iterator[Session]:
     engine = create_engine(
         "sqlite://", connect_args={"check_same_thread": False}, poolclass=StaticPool
     )
-    event.listen(engine, "connect", _set_sqlite_pragmas)
-    init_db(engine)
+    event.listen(engine, "connect", configure_sqlite_connection)
+    create_tables(engine)
     with Session(engine) as session:
         yield session
     engine.dispose()
