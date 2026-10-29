@@ -21,6 +21,7 @@ uv sync                       # install dependencies into .venv
 uv run fastapi dev            # dev server with reload, http://localhost:8000/docs
 uv run pytest                 # tests
 uv run ruff check . && uv run ruff format .
+uv run python scripts/check_sources.py   # check every feed in sources.yaml
 
 # frontend
 # (added in step 9a)

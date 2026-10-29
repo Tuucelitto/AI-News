@@ -355,6 +355,7 @@ Her adım küçük, kendi başına çalışır ve commit'lenebilir. Her adımın
 | Bazı siteler trafilatura'yı engeller / paywall | `rss_summary`'ye geri düş; hata `skipped` olarak işaretlenir |
 | Scheduler'ın çift çalışması | Tek uvicorn worker + `SCHEDULER_ENABLED` |
 | Ücretsiz katmanda verilerin model eğitiminde kullanılabilmesi | Sadece kamuya açık haber metni gönderiliyor; README'de not |
-| Hangi RSS kaynakları? | Adım 2'de birlikte seçilecek (ör. şirket blogları, teknoloji sitelerinin AI kategorileri) |
+| Hangi RSS kaynakları? | ✅ 7 kaynak `backend/sources.yaml` içinde; `scripts/check_sources.py` ile doğrulandı |
+| OpenAI (~1300) ve Hugging Face (~900) feed'leri tüm arşivi içeriyor | Adım 2'de ilk çekmede sadece son N günün haberleri alınacak, yoksa kuyruk ve kota dolar |
 | Python paket yöneticisi (uv / pip) | ✅ uv seçildi |
 | Deploy edilecek mi? | Faz 4'te karar (Render/Fly.io + statik frontend gibi) |
