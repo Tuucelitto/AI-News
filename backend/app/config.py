@@ -11,6 +11,10 @@ class Settings(BaseSettings):
     gemini_model: str = "gemini-3.8-flash"
     gemini_rpm: int = 4
     gemini_daily_limit: int = 18
+    # Used while the main model is failing or out of quota. Empty disables the fallback.
+    gemini_fallback_model: str = "gemini-3.5-flash-lite"
+    gemini_fallback_rpm: int = 12
+    gemini_fallback_daily_limit: int = 45
 
     # Summarization
     summary_min_chars: int = 500

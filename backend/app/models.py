@@ -94,9 +94,10 @@ class Article(SQLModel, table=True):
 
 
 class ApiUsage(SQLModel, table=True):
-    """Number of Gemini requests made per UTC day, for the daily quota."""
+    """Gemini requests made per model per quota day (Google's day, Pacific time)."""
 
     __tablename__ = "api_usage"
 
     day: date = Field(primary_key=True)
+    model: str = Field(primary_key=True)  # each model has its own free-tier quota
     request_count: int = 0

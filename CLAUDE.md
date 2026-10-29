@@ -24,6 +24,7 @@ uv run ruff check . && uv run ruff format .
 uv run python -m scripts.check_sources   # check every feed in sources.yaml
 uv run python -m scripts.fetch_now       # fetch all feeds once into the database
 uv run python -m scripts.try_summary     # summarize one batch, print only (uses 1 Gemini request!)
+uv run python -m scripts.run_queue       # summarize and SAVE, max 2 requests (--max-requests N)
 
 # frontend
 # (added in step 9a)
@@ -33,7 +34,10 @@ uv run python -m scripts.try_summary     # summarize one batch, print only (uses
 
 - **Layering:** `api/` → `services/` → `models`. Route handlers contain no business logic; `scheduler.py` only calls service functions.
 - **Gemini is only called from the summary queue worker** (`services/queue.py` → `services/summarizer.py`).
-  Never call it from a request handler or in a loop. Every call must go through `rate_limiter.py`.
+  Never call it from a request handler or in a loop. Every call must go through `rate_limiter.py`
+  (only `scripts/try_summary.py` bypasses it, for manual prompt checks).
+- Service errors (429/5xx/timeouts) pause the model and switch to `GEMINI_FALLBACK_MODEL`; they never count as
+  article attempts. Time in `QueueWorker` comes from its injected `clock`, so tests can simulate slow requests.
 - **The queue is the database:** `Article.summary_status` (`new/pending/processing/done/skipped/failed`) plus
   `next_attempt_at` and `summary_attempts`. Do not introduce Redis/Celery or in-memory queues.
 - **No hard-coded limits or model names.** RPM, daily limit, thresholds and `GEMINI_MODEL` come from settings (`config.py` / `.env`).

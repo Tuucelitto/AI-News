@@ -75,9 +75,14 @@ Bu yüzden **`Article.summary_status` alanı kuyruğun kendisidir.**
   └─────────── failed
 ```
 
-- Worker her çalıştığında `status=pending AND next_attempt_at <= now` olan **en eski** haberi alır.
-- Geçici hata (429, 503, timeout) → `attempts += 1`, `next_attempt_at = now + backoff` (üstel: 1, 2, 4, 8 dk…), tekrar `pending`.
-- Kalıcı hata (içerik engellendi, geçersiz yanıt) veya `attempts >= MAX_ATTEMPTS` → `failed`, hata mesajı kaydedilir.
+- Worker her çalıştığında `status=pending AND next_attempt_at <= now` olan **en yeni** `SUMMARY_BATCH_SIZE` haberi alır
+  (birikme olursa bugünün haberleri önce Türkçe olsun diye). Daha önce hata almış haberler **tek başına** gönderilir;
+  böylece tek bir sorunlu haber, aynı batch'teki diğerlerini engelleyemez.
+- **Servis hatası** (429, 5xx, timeout) haberin suçu değildir: haberler deneme sayısı artmadan `pending`'e döner, model
+  duraklatılır (sunucunun önerdiği süre veya 1, 2, 4… dk; hata geldiği andan itibaren). Ana model duraklatılmışken veya
+  günlük kotası bitmişken **yedek model** (`GEMINI_FALLBACK_MODEL`, Flash-Lite) kullanılır.
+- **Haber hatası** (yanıtta eksik, tek haberlik istekte kalıcı hata) → `attempts += 1`, `next_attempt_at = now + 5·2^(n-1) dk`.
+  Kalıcı hata tek haberlik istekte geldiyse veya `attempts >= MAX_ATTEMPTS` → `failed`.
 - Uygulama açılışında `processing`'de takılı kalmış kayıtlar `pending`'e geri alınır (crash recovery).
 
 ### 3.2 Rate limit ve kota yönetimi
@@ -86,10 +91,11 @@ Bu yüzden **`Article.summary_status` alanı kuyruğun kendisidir.**
 hepsi `.env` üzerinden ayarlanır (`GEMINI_RPM`, `GEMINI_DAILY_LIMIT` vb.). Kurulumda güncel değerler
 Google AI Studio'daki rate limit sayfasından kontrol edilecek.
 
-Üç katmanlı koruma:
-1. **Zamanlama:** Worker `60 / GEMINI_RPM` saniyeden sık çalışmaz (biraz pay bırakarak).
-2. **Günlük sayaç:** `ApiUsage` tablosunda gün başına istek sayısı tutulur; limite ulaşınca worker o gün durur.
-3. **Reaktif:** 429 gelirse yanıttaki bekleme süresine (varsa) uyulur, yoksa üstel backoff uygulanır.
+Üç katmanlı koruma (her model için ayrı, `rate_limiter.py`):
+1. **Zamanlama:** İki istek arasında en az `60 / RPM` saniye (bellekte tutulur).
+2. **Günlük sayaç:** `ApiUsage` tablosunda **model ve Google günü** (Pasifik saati, gece yarısı sıfırlanır) başına
+   istek sayısı. Başarısız istekler de sayılır. Limite ulaşınca o model sıfırlanmaya kadar kullanılmaz.
+3. **Reaktif:** 429/5xx gelirse model duraklatılır; günlük kota 429'u gelirse sayaç limite eşitlenir.
 
 ### 3.3 "Uzun haber" ne demek?
 
@@ -189,7 +195,7 @@ SQLite + thread'ler için: `check_same_thread=False`, **WAL modu** (okuma/yazma 
 
 İndeksler: `(summary_status, next_attempt_at)`, `published_at`, `feed_id`.
 
-**ApiUsage** — `date` (PK), `request_count`. Günlük kota takibi.
+**ApiUsage** — `day` + `model` (birleşik PK), `request_count`. Model başına günlük kota takibi.
 
 Şema değişiklikleri için **Alembic** (veritabanı migration aracı) eklenmesi 10. adımda değerlendirilecek;
 başlangıçta `SQLModel.metadata.create_all` yeterli.
@@ -344,7 +350,7 @@ Her adım küçük, kendi başına çalışır ve commit'lenebilir. Her adımın
 ### Faz 2 — Özetleme kuyruğu
 - [x] **Adım 5: Gemini özetleyici** — `summarizer.py`: google-genai istemcisi, prompt, toplu structured output, hata sınıflandırması (geçici/kalıcı).
   _Bitti:_ tek bir haber elle özetlenebilir; sahte istemciyle testleri var.
-- [ ] **Adım 6: Kuyruk ve rate limiter** — `queue.py`, `rate_limiter.py`, `ApiUsage`, backoff, crash recovery.
+- [x] **Adım 6: Kuyruk ve rate limiter** — `queue.py`, `rate_limiter.py`, `ApiUsage`, backoff, crash recovery, Flash-Lite yedeği.
   _Bitti:_ testlerde 429 senaryosu, kota dolması ve max deneme davranışı doğrulanır.
 - [ ] **Adım 7: Zamanlayıcı** — `scheduler.py` + `lifespan`: fetch işi ve özet worker'ı; `/api/queue/status`.
   _Bitti:_ uygulama kendi kendine haber toplayıp limitler içinde özetler.
@@ -368,8 +374,8 @@ Her adım küçük, kendi başına çalışır ve commit'lenebilir. Her adımın
 
 | Risk / Soru | Önlem / Karar zamanı |
 |---|---|
-| Ücretsiz katman limitleri değişebilir | ✅ 3.8 Flash: 5 RPM / 20 RPD; `.env`: 4 RPM, 18 günlük, 5 haberlik toplu istek |
-| 3.8 Flash yoğun saatlerde yanıt vermeyebiliyor (29 Ekim akşamı: basit isteklerde bile 504) | Kuyruk 504'ü geçici hata olarak tekrar dener; gerekirse Flash-Lite yedeği (Adım 6'da karar) |
+| Ücretsiz katman limitleri değişebilir | ✅ 3.8 Flash: 5 RPM / 20 RPD → `.env`: 4 / 18. 3.5 Flash-Lite: 15 RPM / 50 RPD → `.env`: 12 / 45. 5 haberlik toplu istek |
+| 3.8 Flash yoğun saatlerde yanıt vermeyebiliyor (29 Ekim akşamı: basit isteklerde bile 504) | ✅ Kuyruk 3.8 Flash'ı duraklatıp Flash-Lite yedeğine geçer (30 Ekim'de gerçek veride doğrulandı) |
 | Bazı siteler trafilatura'yı engeller / paywall | `rss_summary`'ye geri düş; hata `skipped` olarak işaretlenir |
 | Scheduler'ın çift çalışması | Tek uvicorn worker + `SCHEDULER_ENABLED` |
 | Ücretsiz katmanda verilerin model eğitiminde kullanılabilmesi | Sadece kamuya açık haber metni gönderiliyor; README'de not |

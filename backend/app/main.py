@@ -7,6 +7,7 @@ from sqlmodel import Session
 from app.api import articles, feeds, health
 from app.db import engine, init_db
 from app.seed import seed_feeds
+from app.services.queue import reset_stuck_articles
 
 
 @asynccontextmanager
@@ -14,6 +15,7 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
     init_db()
     with Session(engine) as session:
         seed_feeds(session)
+        reset_stuck_articles(session)
     yield
 
 

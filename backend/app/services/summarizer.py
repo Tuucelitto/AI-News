@@ -184,6 +184,8 @@ class GeminiSummarizer:
                     # Summarizing needs little reasoning; low thinking saves time and tokens.
                     thinking_config=types.ThinkingConfig(thinking_level=types.ThinkingLevel.LOW),
                     max_output_tokens=MAX_OUTPUT_TOKENS,
+                    # We use no tools, so automatic function calling is not needed.
+                    automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True),
                 ),
             )
         except (errors.APIError, httpx.HTTPError) as exc:
