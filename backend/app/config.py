@@ -13,7 +13,7 @@ class Settings(BaseSettings):
     gemini_daily_limit: int = 100
 
     # Summarization
-    summary_min_chars: int = 1500
+    summary_min_chars: int = 500
     summary_max_input_chars: int = 12000
     summary_max_attempts: int = 5
 

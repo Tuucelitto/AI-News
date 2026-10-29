@@ -66,6 +66,8 @@ def test_fetch_stores_only_recent_dated_unique_entries(session: Session) -> None
     recent = articles[1]
     assert recent.title == "Recent story"
     assert recent.rss_summary == "Hello world Second & last"
+    assert recent.content == "Full text, first paragraph. Second paragraph."
+    assert articles[0].content is None  # no <content:encoded> in that entry
     assert recent.published_at == datetime(2026, 10, 29, 10, 0, tzinfo=UTC)
     assert recent.summary_status == SummaryStatus.NEW
     assert feed.last_fetched_at == NOW

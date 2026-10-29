@@ -94,7 +94,9 @@ Google AI Studio'daki rate limit sayfasından kontrol edilecek.
 ### 3.3 "Uzun haber" ne demek?
 
 - RSS'teki `summary/description` genellikle kısa ve HTML'lidir. Asıl metin için haber URL'si **trafilatura** ile çekilir.
-- Temizlenmiş metin `SUMMARY_MIN_CHARS` (ör. 1500 karakter) üzerindeyse → `pending`. Altındaysa → `skipped`.
+- Eldeki en uzun metin (sayfadan çıkarılan, RSS `content:encoded` veya RSS açıklaması) `SUMMARY_MIN_CHARS` (500 karakter) üzerindeyse → `pending`. Altındaysa → `skipped`.
+  Eşik düşük tutuldu çünkü özet aynı zamanda Türkçe çeviri işlevi görüyor.
+- Bot engeli olan siteler (ör. Ars Technica, HTTP 405) için User-Agent taklidi yapılmaz; RSS içeriğine geri düşülür.
 - Gemini'ye gönderilen metin `SUMMARY_MAX_INPUT_CHARS` ile kırpılır (token tasarrufu).
 
 ### 3.4 Gemini çağrısı: yapılandırılmış çıktı
@@ -282,7 +284,7 @@ GEMINI_API_KEY=
 GEMINI_MODEL=gemini-flash-latest      # kurulumda güncel Flash model adı doğrulanacak
 GEMINI_RPM=5
 GEMINI_DAILY_LIMIT=100
-SUMMARY_MIN_CHARS=1500
+SUMMARY_MIN_CHARS=500
 SUMMARY_MAX_INPUT_CHARS=12000
 SUMMARY_MAX_ATTEMPTS=5
 FETCH_MAX_AGE_HOURS=48
@@ -321,7 +323,7 @@ Her adım küçük, kendi başına çalışır ve commit'lenebilir. Her adımın
 - [x] **Adım 2: RSS çekme** — `fetcher.py`: feedparser, URL normalizasyonu, tekilleştirme, ETag/Last-Modified, `seed.py` (`sources.yaml`'dan),
   yayın tarihi `FETCH_MAX_AGE_HOURS` (48) saatten eski haberleri atla.
   _Bitti:_ bir komutla kaynaklar çekilir, aynı haber iki kez eklenmez; testleri var.
-- [ ] **Adım 3: İçerik çıkarma** — `extractor.py`: trafilatura, timeout, hata toleransı, uzun/kısa kararı (`pending`/`skipped`).
+- [x] **Adım 3: İçerik çıkarma** — `extractor.py`: trafilatura, timeout, hata toleransı, uzun/kısa kararı (`pending`/`skipped`).
   _Bitti:_ haberlerin `content_length` ve `summary_status` alanları doğru dolar.
 - [ ] **Adım 4: Okuma API'si** — `/api/articles` (sayfalama, filtre, arama), `/api/articles/{id}`, `/api/feeds`.
   _Bitti:_ Swagger (`/docs`) üzerinden veriler görülür; API testleri geçer.

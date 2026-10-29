@@ -107,6 +107,12 @@ def html_to_text(html: str) -> str:
     return " ".join("".join(parser.parts).split())
 
 
+def entry_content(entry: feedparser.FeedParserDict) -> str | None:
+    """Full text some feeds embed in <content:encoded>, as plain text."""
+    texts = [html_to_text(item.get("value", "")) for item in entry.get("content", [])]
+    return max(texts, key=len, default="") or None
+
+
 def _store_new_entries(
     session: Session, feed: Feed, entries: list[feedparser.FeedParserDict], cutoff: datetime
 ) -> int:
@@ -130,6 +136,7 @@ def _store_new_entries(
                 author=entry.get("author"),
                 published_at=published,
                 rss_summary=html_to_text(entry.get("summary", "")) or None,
+                content=entry_content(entry),
             ),
         )
 
