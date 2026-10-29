@@ -1,32 +1,78 @@
 import { defineStore } from 'pinia'
 import { computed, ref, watch } from 'vue'
 
+import { api } from '@/api/client'
+import { errorMessage } from '@/utils/errors'
+
 const ADMIN_KEY_STORAGE = 'ai-news:admin-key'
+const THEME_STORAGE = 'ai-news:theme' // also read by the inline script in index.html
+
+export type Theme = 'system' | 'light' | 'dark'
+const THEMES: Theme[] = ['system', 'light', 'dark']
 
 // localStorage can throw (private mode, blocked storage); the app must still work without it.
-function readStoredKey(): string {
+function readStorage(key: string): string | null {
   try {
-    return localStorage.getItem(ADMIN_KEY_STORAGE) ?? ''
+    return localStorage.getItem(key)
   } catch {
-    return ''
+    return null
   }
 }
 
-function storeKey(value: string): void {
+function writeStorage(key: string, value: string): void {
   try {
-    if (value) localStorage.setItem(ADMIN_KEY_STORAGE, value)
-    else localStorage.removeItem(ADMIN_KEY_STORAGE)
+    if (value) localStorage.setItem(key, value)
+    else localStorage.removeItem(key)
   } catch {
-    // Not persisted; the key stays in memory for this tab.
+    // Not persisted; the value stays in memory for this tab.
   }
 }
 
-/** The admin key for write endpoints, remembered in this browser only. */
+function systemPrefersDark(): boolean {
+  return window.matchMedia?.('(prefers-color-scheme: dark)').matches ?? false
+}
+
 export const useSettingsStore = defineStore('settings', () => {
-  const adminKey = ref(readStoredKey())
+  // --- Admin key (remembered in this browser only) ---
+  const adminKey = ref(readStorage(ADMIN_KEY_STORAGE) ?? '')
   const hasAdminKey = computed(() => adminKey.value.length > 0)
+  watch(adminKey, (value) => writeStorage(ADMIN_KEY_STORAGE, value))
 
-  watch(adminKey, storeKey)
+  /** Checks the key with the backend and saves it if valid. Returns an error message or null. */
+  async function saveAdminKey(key: string): Promise<string | null> {
+    try {
+      await api.checkAdminKey(key)
+    } catch (e) {
+      return errorMessage(e)
+    }
+    adminKey.value = key
+    return null
+  }
 
-  return { adminKey, hasAdminKey }
+  function forgetAdminKey(): void {
+    adminKey.value = ''
+  }
+
+  // --- Theme ---
+  const stored = readStorage(THEME_STORAGE)
+  const theme = ref<Theme>(THEMES.includes(stored as Theme) ? (stored as Theme) : 'system')
+
+  function applyTheme(): void {
+    const dark = theme.value === 'dark' || (theme.value === 'system' && systemPrefersDark())
+    document.documentElement.classList.toggle('dark', dark)
+  }
+
+  function cycleTheme(): void {
+    theme.value = THEMES[(THEMES.indexOf(theme.value) + 1) % THEMES.length]!
+  }
+
+  watch(theme, (value) => {
+    writeStorage(THEME_STORAGE, value === 'system' ? '' : value)
+    applyTheme()
+  })
+  // Follow the operating system live while the theme is "system".
+  window.matchMedia?.('(prefers-color-scheme: dark)').addEventListener('change', applyTheme)
+  applyTheme()
+
+  return { adminKey, hasAdminKey, saveAdminKey, forgetAdminKey, theme, cycleTheme }
 })

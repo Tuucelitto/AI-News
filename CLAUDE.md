@@ -62,6 +62,9 @@ npm run type-check && npm run lint && npm run build
 - Frontend: typed API client in `src/api/client.ts` (components never call `fetch` directly), types mirroring
   `backend/app/schemas.py` in `src/types/api.ts` (update both together), one Pinia store per domain (setup syntax),
   lazy-loaded views. UI text is Turkish; code and API error messages are English.
+- Styling: Tailwind; reuse the `card`, `btn`, `btn-primary`, `input-field` utilities from `src/assets/main.css` and give
+  every color a `dark:` variant. Show API errors through `errorMessage()` (`src/utils/errors.ts`, Turkish text).
+- Never use `window.confirm/alert/prompt` (they block the page and browser automation); use inline confirmation.
 
 ## Secrets
 

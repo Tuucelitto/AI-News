@@ -9,9 +9,9 @@ const props = defineProps<{ status: SummaryStatus }>()
 const info = computed(() => statusInfo(props.status))
 
 const toneClasses = {
-  waiting: 'bg-amber-100 text-amber-800',
-  muted: 'bg-gray-100 text-gray-600',
-  error: 'bg-red-100 text-red-800',
+  waiting: 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300',
+  muted: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400',
+  error: 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300',
 }
 </script>
 

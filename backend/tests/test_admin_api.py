@@ -82,6 +82,11 @@ def test_write_endpoints_are_closed_without_a_configured_key(
     assert response.status_code == 403
 
 
+@pytest.mark.parametrize(("headers", "expected"), [(ADMIN, 204), ({"X-Admin-Key": "wrong"}, 401)])
+def test_admin_key_check(client: TestClient, headers: dict, expected: int) -> None:
+    assert client.get("/api/admin/check", headers=headers).status_code == expected
+
+
 def test_reading_needs_no_key(client: TestClient, feed: Feed) -> None:
     assert client.get("/api/feeds").status_code == 200
 

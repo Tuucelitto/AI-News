@@ -6,7 +6,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlmodel import Session
 
-from app.api import articles, feeds, health, queue
+from app.api import admin, articles, feeds, health, queue
 from app.config import settings
 from app.db import engine, init_db
 from app.scheduler import start_background_jobs, stop_background_jobs
@@ -46,5 +46,5 @@ app.add_middleware(
     allow_headers=["Content-Type", "X-Admin-Key"],
 )
 
-for module in (health, articles, feeds, queue):
+for module in (health, articles, feeds, queue, admin):
     app.include_router(module.router, prefix="/api")

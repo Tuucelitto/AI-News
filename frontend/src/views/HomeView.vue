@@ -113,8 +113,8 @@ function onPageChange(page: number) {
         class="rounded-full border px-3 py-1 text-sm"
         :class="
           filters.range === range.value
-            ? 'border-gray-900 bg-gray-900 text-white'
-            : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-100'
+            ? 'border-gray-900 bg-gray-900 text-white dark:border-gray-100 dark:bg-gray-100 dark:text-gray-900'
+            : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:bg-gray-800'
         "
         :aria-pressed="filters.range === range.value"
         @click="updateFilters({ range: range.value })"
@@ -129,12 +129,12 @@ function onPageChange(page: number) {
         type="search"
         placeholder="Haberlerde ara…"
         aria-label="Haberlerde ara"
-        class="flex-1 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
+        class="input-field flex-1"
       />
       <select
         :value="filters.feedId ?? ''"
         aria-label="Kaynak"
-        class="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
+        class="input-field"
         @change="onFeedChange"
       >
         <option value="">Tüm kaynaklar</option>
@@ -148,15 +148,21 @@ function onPageChange(page: number) {
   <ErrorMessage v-if="articles.error" :message="articles.error" @retry="load" />
 
   <div v-else-if="articles.loading && !articles.page" class="space-y-3" aria-busy="true">
-    <div v-for="i in 5" :key="i" class="h-28 animate-pulse rounded-lg bg-gray-200" />
+    <div
+      v-for="i in 5"
+      :key="i"
+      class="h-28 animate-pulse rounded-lg bg-gray-200 dark:bg-gray-800"
+    />
   </div>
 
   <template v-else-if="articles.page">
-    <p class="mb-3 text-sm text-gray-500" aria-live="polite">{{ articles.page.total }} haber</p>
+    <p class="mb-3 text-sm text-gray-500 dark:text-gray-400" aria-live="polite">
+      {{ articles.page.total }} haber
+    </p>
 
     <p
       v-if="articles.page.items.length === 0"
-      class="rounded-lg border border-dashed border-gray-300 p-8 text-center text-gray-600"
+      class="rounded-lg border border-dashed border-gray-300 p-8 text-center text-gray-600 dark:border-gray-700 dark:text-gray-400"
     >
       Bu filtrelere uyan haber yok.
     </p>

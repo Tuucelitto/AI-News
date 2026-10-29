@@ -2,11 +2,9 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 
 import { ApiError, api } from '@/api/client'
+import { useSettingsStore } from '@/stores/settings'
 import type { ArticleDetail, ArticleListItem, ArticleQuery, Page } from '@/types/api'
-
-function messageOf(e: unknown): string {
-  return e instanceof Error ? e.message : String(e)
-}
+import { errorMessage } from '@/utils/errors'
 
 export const useArticlesStore = defineStore('articles', () => {
   // --- List ---
@@ -25,7 +23,7 @@ export const useArticlesStore = defineStore('articles', () => {
       const result = await api.listArticles(query)
       if (requestId === latestListRequest) page.value = result
     } catch (e) {
-      if (requestId === latestListRequest) error.value = messageOf(e)
+      if (requestId === latestListRequest) error.value = errorMessage(e)
     } finally {
       if (requestId === latestListRequest) loading.value = false
     }
@@ -46,10 +44,17 @@ export const useArticlesStore = defineStore('articles', () => {
       article.value = await api.getArticle(id)
     } catch (e) {
       if (e instanceof ApiError && e.status === 404) articleNotFound.value = true
-      else articleError.value = messageOf(e)
+      else articleError.value = errorMessage(e)
     } finally {
       articleLoading.value = false
     }
+  }
+
+  /** Put an article back into the summary queue. Throws on failure (see errorMessage). */
+  async function resummarize(id: number): Promise<void> {
+    const settings = useSettingsStore()
+    const updated = await api.resummarizeArticle(id, settings.adminKey)
+    if (article.value?.id === id) article.value = updated
   }
 
   return {
@@ -62,5 +67,6 @@ export const useArticlesStore = defineStore('articles', () => {
     articleError,
     articleNotFound,
     fetchArticle,
+    resummarize,
   }
 })

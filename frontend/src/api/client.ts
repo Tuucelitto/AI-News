@@ -91,4 +91,6 @@ export const api = {
     request<FeedRefreshResult>(`/feeds/${id}/refresh`, { method: 'POST', adminKey }),
 
   queueStatus: () => request<QueueStatus>('/queue/status'),
+
+  checkAdminKey: (adminKey: string) => request<void>('/admin/check', { adminKey }),
 }

@@ -6,12 +6,15 @@ import { makeListItem, testRouter } from '@/__tests__/helpers'
 import { api } from '@/api/client'
 import HomeView from '@/views/HomeView.vue'
 
-// vi.mock is hoisted above the imports, so the real `api` cannot be referenced here;
-// a type-only import() is fine because it disappears at compile time.
-type Api = (typeof import('@/api/client'))['api']
-vi.mock('@/api/client', () => ({
-  api: { listArticles: vi.fn<Api['listArticles']>(), listFeeds: vi.fn<Api['listFeeds']>() },
-}))
+vi.mock('@/api/client', async (importOriginal) => {
+  const original = await importOriginal<typeof import('@/api/client')>()
+  type Api = typeof original.api
+  // Keep the real module (ApiError is used by the error messages); replace only the calls.
+  return {
+    ...original,
+    api: { listArticles: vi.fn<Api['listArticles']>(), listFeeds: vi.fn<Api['listFeeds']>() },
+  }
+})
 
 async function mountHome(path = '/') {
   const router = testRouter()

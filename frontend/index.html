@@ -5,6 +5,19 @@
     <link rel="icon" href="/favicon.ico">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Haberleri</title>
+    <script>
+      // Apply the saved theme before Vue loads, so a dark page never flashes white.
+      // Keep in sync with src/stores/settings.ts.
+      try {
+        const theme = localStorage.getItem('ai-news:theme') || 'system'
+        const dark =
+          theme === 'dark' ||
+          (theme === 'system' && matchMedia('(prefers-color-scheme: dark)').matches)
+        document.documentElement.classList.toggle('dark', dark)
+      } catch {
+        // Storage blocked: fall back to the light theme until the app starts.
+      }
+    </script>
   </head>
   <body>
     <div id="app"></div>
