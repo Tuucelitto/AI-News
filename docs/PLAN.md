@@ -361,7 +361,7 @@ Her adım küçük, kendi başına çalışır ve commit'lenebilir. Her adımın
   _Bitti:_ korumalı uçlar anahtarsız 401 döner.
 
 ### Faz 3 — Frontend
-- [ ] **Adım 9a: Frontend iskeleti** — Vite + Vue 3 + TS, Tailwind, Router, Pinia, API istemcisi, Vite proxy, tipler.
+- [x] **Adım 9a: Frontend iskeleti** — Vite + Vue 3 + TS, Tailwind, Router, Pinia, API istemcisi, Vite proxy, tipler.
 - [ ] **Adım 9b: Haber akışı ve detay** — HomeView, ArticleView, kart ve rozet bileşenleri, sayfalama, arama.
 - [ ] **Adım 9c: Kaynaklar ve durum paneli** — FeedsView, StatusView, admin anahtarı girişi, karanlık mod.
   _Bitti:_ uçtan uca akış tarayıcıda çalışır.

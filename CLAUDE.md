@@ -26,8 +26,11 @@ uv run python -m scripts.fetch_now       # fetch all feeds once into the databas
 uv run python -m scripts.try_summary     # summarize one batch, print only (uses 1 Gemini request!)
 uv run python -m scripts.run_queue       # summarize and SAVE, max 2 requests (--max-requests N)
 
-# frontend
-# (added in step 9a)
+# frontend (run inside frontend/; Node ^22.18, npm 11 — npm 10 crashes on install)
+npm install
+npm run dev                   # http://localhost:5173, proxies /api to 127.0.0.1:8000
+npx vitest run                # unit tests (npm run test:unit starts watch mode)
+npm run type-check && npm run lint && npm run build
 ```
 
 ## Architecture rules
@@ -56,7 +59,9 @@ uv run python -m scripts.run_queue       # summarize and SAVE, max 2 requests (-
 - Code, identifiers, comments, commit messages and README: **English**.
 - Generated summaries (`title_tr`, `summary_tr`, `key_points`) are Turkish.
 - Python: type hints everywhere, Ruff for lint/format, `datetime` values in UTC.
-- Frontend: typed API client in `src/api/`, shared types in `src/types/`, one Pinia store per domain.
+- Frontend: typed API client in `src/api/client.ts` (components never call `fetch` directly), types mirroring
+  `backend/app/schemas.py` in `src/types/api.ts` (update both together), one Pinia store per domain (setup syntax),
+  lazy-loaded views. UI text is Turkish; code and API error messages are English.
 
 ## Secrets
 

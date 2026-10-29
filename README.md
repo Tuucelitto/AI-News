@@ -7,6 +7,16 @@ using a rate-limited summarization queue. Built with FastAPI + SQLModel and Vue 
 
 See [`docs/PLAN.md`](docs/PLAN.md) for the architecture and roadmap.
 
+## Frontend (development)
+
+Requires Node.js ^22.18 and npm 11.
+
+```bash
+cd frontend
+npm install
+npm run dev               # http://localhost:5173 (start the backend first)
+```
+
 ## Backend (development)
 
 Requires [uv](https://docs.astral.sh/uv/).
