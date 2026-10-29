@@ -27,6 +27,7 @@ class Settings(BaseSettings):
 
     # Scheduler
     fetch_interval_minutes: int = 60
+    summary_interval_seconds: int = 15  # how often the queue worker checks for work
     scheduler_enabled: bool = True
 
     # App

@@ -42,6 +42,9 @@ uv run python -m scripts.run_queue       # summarize and SAVE, max 2 requests (-
   `next_attempt_at` and `summary_attempts`. Do not introduce Redis/Celery or in-memory queues.
 - **No hard-coded limits or model names.** RPM, daily limit, thresholds and `GEMINI_MODEL` come from settings (`config.py` / `.env`).
 - **Single scheduler instance:** run uvicorn with one worker; the scheduler is started in the FastAPI `lifespan` and guarded by `SCHEDULER_ENABLED`.
+  Only ONE app process may run against the same database: a second one (e.g. a forgotten `fastapi dev` that hot-reloaded)
+  starts a second scheduler and both work the same queue. Before starting the app for a manual test, check
+  `lsof -nP -iTCP -sTCP:LISTEN | grep python`; use `SCHEDULER_ENABLED=false` for API-only runs.
 - Background jobs are synchronous and run in threads; each job opens its own DB session. SQLite runs in WAL mode.
 - API responses use dedicated read schemas; never expose `Article.content` (full extracted text) to the client.
 - The UI shows summaries and links to the original source, never the full scraped text.

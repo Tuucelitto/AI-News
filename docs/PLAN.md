@@ -352,7 +352,7 @@ Her adım küçük, kendi başına çalışır ve commit'lenebilir. Her adımın
   _Bitti:_ tek bir haber elle özetlenebilir; sahte istemciyle testleri var.
 - [x] **Adım 6: Kuyruk ve rate limiter** — `queue.py`, `rate_limiter.py`, `ApiUsage`, backoff, crash recovery, Flash-Lite yedeği.
   _Bitti:_ testlerde 429 senaryosu, kota dolması ve max deneme davranışı doğrulanır.
-- [ ] **Adım 7: Zamanlayıcı** — `scheduler.py` + `lifespan`: fetch işi ve özet worker'ı; `/api/queue/status`.
+- [x] **Adım 7: Zamanlayıcı** — `scheduler.py` + `lifespan`: fetch işi ve özet worker'ı; `/api/queue/status`.
   _Bitti:_ uygulama kendi kendine haber toplayıp limitler içinde özetler.
 - [ ] **Adım 8: Yazma uçları** — kaynak ekle/sil/güncelle/yenile, yeniden özetle; admin anahtarı; CORS.
   _Bitti:_ korumalı uçlar anahtarsız 401 döner.
@@ -377,7 +377,7 @@ Her adım küçük, kendi başına çalışır ve commit'lenebilir. Her adımın
 | Ücretsiz katman limitleri değişebilir | ✅ 3.8 Flash: 5 RPM / 20 RPD → `.env`: 4 / 18. 3.5 Flash-Lite: 15 RPM / 50 RPD → `.env`: 12 / 45. 5 haberlik toplu istek |
 | 3.8 Flash yoğun saatlerde yanıt vermeyebiliyor (29 Ekim akşamı: basit isteklerde bile 504) | ✅ Kuyruk 3.8 Flash'ı duraklatıp Flash-Lite yedeğine geçer (30 Ekim'de gerçek veride doğrulandı) |
 | Bazı siteler trafilatura'yı engeller / paywall | `rss_summary`'ye geri düş; hata `skipped` olarak işaretlenir |
-| Scheduler'ın çift çalışması | Tek uvicorn worker + `SCHEDULER_ENABLED` |
+| Scheduler'ın çift çalışması | Tek uvicorn worker + `SCHEDULER_ENABLED`. 30 Ekim'de gerçekten yaşandı: unutulmuş bir `fastapi dev` sunucusu hot-reload ile ikinci bir scheduler başlattı. Gerekirse `_claim_batch` atomik hale getirilir (`UPDATE … WHERE status='pending' RETURNING`) |
 | Ücretsiz katmanda verilerin model eğitiminde kullanılabilmesi | Sadece kamuya açık haber metni gönderiliyor; README'de not |
 | Hangi RSS kaynakları? | ✅ 7 kaynak `backend/sources.yaml` içinde; `scripts.check_sources` ile doğrulandı |
 | OpenAI (~1300) ve Hugging Face (~900) feed'leri tüm arşivi içeriyor | ✅ Sadece son 48 saatte yayımlanan haberler alınır (`FETCH_MAX_AGE_HOURS=48`, kesinti payı olarak); arayüz varsayılan olarak son 24 saati gösterir, eski haberler DB'de kalır |

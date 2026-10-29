@@ -40,6 +40,23 @@ class ArticleListItem(SQLModel):
     summary_status: SummaryStatus
 
 
+class ModelStatus(BaseModel):
+    model: str
+    role: str  # "primary" or "fallback"
+    requests_today: int
+    daily_limit: int
+    quota_resets_at: datetime
+    paused_until: datetime | None
+
+
+class QueueStatus(BaseModel):
+    counts: dict[SummaryStatus, int]
+    models: list[ModelStatus]
+    scheduler_running: bool
+    last_fetch_at: datetime | None
+    next_fetch_at: datetime | None
+
+
 class ArticleDetail(ArticleListItem):
     author: str | None
     key_points: list[str] | None
