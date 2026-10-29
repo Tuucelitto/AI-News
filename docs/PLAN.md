@@ -28,7 +28,7 @@
                  ┌──────────────────────────── backend (FastAPI, tek süreç) ───────────────────────────┐
                  │                                                                                     │
  RSS kaynakları ─┼─► [Fetch job] ──► [Extract] ──► Article (DB) ──► [Summary queue worker] ──► Gemini   │
-  (feedparser)   │   her 30 dk      trafilatura    status=pending     her ~N sn, 1 haber      API       │
+  (feedparser)   │   her 60 dk      trafilatura    status=pending     her ~N sn, 1 haber      API       │
                  │        ▲                              │                     │                        │
                  │        └──────── APScheduler ─────────┴─────────────────────┘                        │
                  │                                                                                     │
@@ -285,7 +285,8 @@ GEMINI_DAILY_LIMIT=100
 SUMMARY_MIN_CHARS=1500
 SUMMARY_MAX_INPUT_CHARS=12000
 SUMMARY_MAX_ATTEMPTS=5
-FETCH_INTERVAL_MINUTES=30
+FETCH_MAX_AGE_HOURS=48
+FETCH_INTERVAL_MINUTES=60
 SCHEDULER_ENABLED=true
 DATABASE_URL=sqlite:///./data/ai_news.db
 ADMIN_API_KEY=
@@ -317,7 +318,8 @@ Her adım küçük, kendi başına çalışır ve commit'lenebilir. Her adımın
 ### Faz 1 — Backend çekirdeği
 - [x] **Adım 1: Ayarlar ve veritabanı** — `config.py` (pydantic-settings), `db.py`, `models.py`, tablo oluşturma.
   _Bitti:_ uygulama açılınca SQLite dosyası ve tablolar oluşur.
-- [ ] **Adım 2: RSS çekme** — `fetcher.py`: feedparser, URL normalizasyonu, tekilleştirme, ETag/Last-Modified, `seed.py`.
+- [x] **Adım 2: RSS çekme** — `fetcher.py`: feedparser, URL normalizasyonu, tekilleştirme, ETag/Last-Modified, `seed.py` (`sources.yaml`'dan),
+  yayın tarihi `FETCH_MAX_AGE_HOURS` (48) saatten eski haberleri atla.
   _Bitti:_ bir komutla kaynaklar çekilir, aynı haber iki kez eklenmez; testleri var.
 - [ ] **Adım 3: İçerik çıkarma** — `extractor.py`: trafilatura, timeout, hata toleransı, uzun/kısa kararı (`pending`/`skipped`).
   _Bitti:_ haberlerin `content_length` ve `summary_status` alanları doğru dolar.
@@ -355,7 +357,7 @@ Her adım küçük, kendi başına çalışır ve commit'lenebilir. Her adımın
 | Bazı siteler trafilatura'yı engeller / paywall | `rss_summary`'ye geri düş; hata `skipped` olarak işaretlenir |
 | Scheduler'ın çift çalışması | Tek uvicorn worker + `SCHEDULER_ENABLED` |
 | Ücretsiz katmanda verilerin model eğitiminde kullanılabilmesi | Sadece kamuya açık haber metni gönderiliyor; README'de not |
-| Hangi RSS kaynakları? | ✅ 7 kaynak `backend/sources.yaml` içinde; `scripts/check_sources.py` ile doğrulandı |
-| OpenAI (~1300) ve Hugging Face (~900) feed'leri tüm arşivi içeriyor | Adım 2'de ilk çekmede sadece son N günün haberleri alınacak, yoksa kuyruk ve kota dolar |
+| Hangi RSS kaynakları? | ✅ 7 kaynak `backend/sources.yaml` içinde; `scripts.check_sources` ile doğrulandı |
+| OpenAI (~1300) ve Hugging Face (~900) feed'leri tüm arşivi içeriyor | ✅ Sadece son 48 saatte yayımlanan haberler alınır (`FETCH_MAX_AGE_HOURS=48`, kesinti payı olarak); arayüz varsayılan olarak son 24 saati gösterir, eski haberler DB'de kalır |
 | Python paket yöneticisi (uv / pip) | ✅ uv seçildi |
 | Deploy edilecek mi? | Faz 4'te karar (Render/Fly.io + statik frontend gibi) |

@@ -17,8 +17,11 @@ class Settings(BaseSettings):
     summary_max_input_chars: int = 12000
     summary_max_attempts: int = 5
 
+    # Fetching: entries published longer ago than this are ignored.
+    fetch_max_age_hours: int = 48
+
     # Scheduler
-    fetch_interval_minutes: int = 30
+    fetch_interval_minutes: int = 60
     scheduler_enabled: bool = True
 
     # App

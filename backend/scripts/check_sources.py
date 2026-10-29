@@ -1,21 +1,18 @@
 """Check that every RSS source in sources.yaml is reachable and parseable.
 
 Usage (from backend/):
-    uv run python scripts/check_sources.py
+    uv run python -m scripts.check_sources
 """
 
 import sys
 from dataclasses import dataclass
 from datetime import UTC, datetime
-from pathlib import Path
 
-import feedparser
 import httpx
-import yaml
 
-SOURCES_FILE = Path(__file__).resolve().parent.parent / "sources.yaml"
-TIMEOUT_SECONDS = 10
-USER_AGENT = "ai-news-bot/0.1 (personal RSS reader)"
+from app.seed import load_sources
+from app.services.fetcher import create_http_client, download_feed, entry_date, parse_feed
+
 TITLE_WIDTH = 60
 
 
@@ -29,34 +26,15 @@ class CheckResult:
     error: str | None = None
 
 
-def load_sources(path: Path) -> list[dict[str, str]]:
-    with path.open(encoding="utf-8") as file:
-        return yaml.safe_load(file)["sources"]
-
-
-def entry_date(entry: feedparser.FeedParserDict) -> datetime | None:
-    # feedparser normalizes dates to a UTC time.struct_time.
-    parsed = entry.get("published_parsed") or entry.get("updated_parsed")
-    if parsed is None:
-        return None
-    return datetime(*parsed[:6], tzinfo=UTC)
-
-
 def check_source(client: httpx.Client, name: str, url: str) -> CheckResult:
-    # Download with httpx instead of feedparser: feedparser has no timeout,
-    # so an unresponsive server could block the script forever.
     try:
-        response = client.get(url)
-        response.raise_for_status()
+        response = download_feed(client, url)
     except httpx.HTTPStatusError as exc:
         return CheckResult(name, ok=False, error=f"HTTP {exc.response.status_code}")
     except httpx.HTTPError as exc:
         return CheckResult(name, ok=False, error=f"{type(exc).__name__}: {exc}")
 
-    feed = feedparser.parse(
-        response.content,
-        response_headers={"content-type": response.headers.get("content-type", "")},
-    )
+    feed = parse_feed(response)
     if not feed.entries:
         # "bozo" is set when the XML is malformed; only fatal if nothing could be parsed.
         reason = f"Invalid feed: {feed.bozo_exception}" if feed.bozo else "Feed has no items"
@@ -103,13 +81,10 @@ def print_table(results: list[CheckResult]) -> None:
 
 
 def main() -> int:
-    sources = load_sources(SOURCES_FILE)
     results: list[CheckResult] = []
 
-    with httpx.Client(
-        timeout=TIMEOUT_SECONDS, follow_redirects=True, headers={"User-Agent": USER_AGENT}
-    ) as client:
-        for source in sources:
+    with create_http_client() as client:
+        for source in load_sources():
             print(f"Checking {source['name']}...", file=sys.stderr)
             try:
                 results.append(check_source(client, source["name"], source["url"]))

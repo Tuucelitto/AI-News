@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>Sample AI Blog</title>
+    <link>https://blog.example.com</link>
+    <description>Test feed</description>
+
+    <item>
+      <title>Recent story</title>
+      <link>https://Blog.Example.com/recent?utm_source=rss&amp;id=7#comments</link>
+      <guid>recent-1</guid>
+      <pubDate>Thu, 29 Oct 2026 10:00:00 GMT</pubDate>
+      <author>Ada</author>
+      <description>&lt;p&gt;Hello &lt;b&gt;world&lt;/b&gt;&lt;/p&gt;&lt;p&gt;Second &amp;amp; last&lt;/p&gt;</description>
+    </item>
+
+    <item>
+      <title>Same story, different tracking link</title>
+      <link>https://blog.example.com/recent?id=7&amp;utm_medium=feed</link>
+      <guid>recent-1-dup</guid>
+      <pubDate>Thu, 29 Oct 2026 10:00:00 GMT</pubDate>
+    </item>
+
+    <item>
+      <title>Yesterday's story</title>
+      <link>https://blog.example.com/yesterday</link>
+      <guid>yesterday-1</guid>
+      <pubDate>Wed, 28 Oct 2026 20:00:00 GMT</pubDate>
+    </item>
+
+    <item>
+      <title>Old story</title>
+      <link>https://blog.example.com/old</link>
+      <guid>old-1</guid>
+      <pubDate>Tue, 20 Oct 2026 08:00:00 GMT</pubDate>
+    </item>
+
+    <item>
+      <title>Undated story</title>
+      <link>https://blog.example.com/undated</link>
+      <guid>undated-1</guid>
+    </item>
+  </channel>
+</rss>
