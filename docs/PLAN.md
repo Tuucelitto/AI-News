@@ -325,7 +325,7 @@ Her adım küçük, kendi başına çalışır ve commit'lenebilir. Her adımın
   _Bitti:_ bir komutla kaynaklar çekilir, aynı haber iki kez eklenmez; testleri var.
 - [x] **Adım 3: İçerik çıkarma** — `extractor.py`: trafilatura, timeout, hata toleransı, uzun/kısa kararı (`pending`/`skipped`).
   _Bitti:_ haberlerin `content_length` ve `summary_status` alanları doğru dolar.
-- [ ] **Adım 4: Okuma API'si** — `/api/articles` (sayfalama, filtre, arama), `/api/articles/{id}`, `/api/feeds`.
+- [x] **Adım 4: Okuma API'si** — `/api/articles` (sayfalama, filtre, arama), `/api/articles/{id}`, `/api/feeds`.
   _Bitti:_ Swagger (`/docs`) üzerinden veriler görülür; API testleri geçer.
 
 ### Faz 2 — Özetleme kuyruğu
