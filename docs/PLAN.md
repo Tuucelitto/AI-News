@@ -376,9 +376,9 @@ Her adım küçük, kendi başına çalışır ve commit'lenebilir. Her adımın
 ### Faz 4 — Portföy cilası
 - [x] **Adım 10: Kalite** — Alembic (açılışta otomatik migration, eski DB'leri benimseme, şema sapma testi),
   Türkçe/İngilizce uyumlu arama. Vitest, ESLint/oxlint, Prettier Adım 9'da kuruldu.
-- [ ] **Adım 11: CI** — GitHub Actions: backend lint + test, frontend lint + type-check + build.
-  `.github/workflows/ci.yml` yazıldı ve temiz bir kopyada yerel olarak test edildi (10/10 adım; bilerek bozulan kodda
-  ilgili adımlar başarısız oluyor). Kalan: GitHub deposu açılıp push edilmesi ve ilk gerçek çalıştırma.
+- [x] **Adım 11: CI** — GitHub Actions: backend lint + test, frontend lint + type-check + build.
+  `.github/workflows/ci.yml` ilk gerçek çalıştırmada doğrulandı (30 Ekim 2026: backend 16 sn, frontend 47 sn).
+
 - [ ] **Adım 12: Sunum** — İngilizce README (mimari diyagram, ekran görüntüleri, kurulum), isteğe bağlı Docker Compose.
 
 ---
