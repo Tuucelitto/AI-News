@@ -1,5 +1,7 @@
 # AI News — Mimari ve Uygulama Planı
 
+> *This planning document is in Turkish. See the [README](../README.md) for an English overview.*
+
 > Yapay zeka haberlerini RSS kaynaklarından toplayan, uzun haberleri Gemini (Flash, ücretsiz katman) ile
 > Türkçe özetleyen ve bir web arayüzünde sunan uygulama.
 >
@@ -379,7 +381,7 @@ Her adım küçük, kendi başına çalışır ve commit'lenebilir. Her adımın
 - [x] **Adım 11: CI** — GitHub Actions: backend lint + test, frontend lint + type-check + build.
   `.github/workflows/ci.yml` ilk gerçek çalıştırmada doğrulandı (30 Ekim 2026: backend 16 sn, frontend 47 sn).
 
-- [ ] **Adım 12: Sunum** — İngilizce README (mimari diyagram, ekran görüntüleri, kurulum), isteğe bağlı Docker Compose.
+- [x] **Adım 12: Sunum** — İngilizce README (mimari diyagram, ekran görüntüleri, kurulum). Docker Compose, canlıya alma ertelendiği için yapılmadı.
 
 ---
 
