@@ -24,7 +24,7 @@ HttpClientDep = Annotated[httpx.Client, Depends(get_http_client)]
 
 
 def require_admin(x_admin_key: Annotated[str | None, Header()] = None) -> None:
-    """Protects write endpoints. Reading stays public."""
+    """Protects write endpoints and the status dashboard. Reading articles stays public."""
     if not settings.admin_api_key:
         # Fail closed: a forgotten key must not leave the write endpoints open.
         raise HTTPException(

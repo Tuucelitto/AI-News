@@ -36,7 +36,7 @@ def data(session: Session) -> None:
 
 
 def test_status_without_scheduler(client: TestClient, data) -> None:
-    body = client.get("/api/queue/status").json()
+    body = client.get("/api/queue/status", headers={"X-Admin-Key": "test-admin-key"}).json()
 
     assert body["counts"] == {
         "new": 0,
@@ -77,7 +77,7 @@ def test_status_with_running_scheduler(
         app.state, "jobs", SimpleNamespace(scheduler=scheduler, worker=worker), raising=False
     )
 
-    body = client.get("/api/queue/status").json()
+    body = client.get("/api/queue/status", headers={"X-Admin-Key": "test-admin-key"}).json()
 
     primary, fallback = body["models"]
     assert datetime.fromisoformat(primary["paused_until"]) == paused_until
@@ -85,3 +85,7 @@ def test_status_with_running_scheduler(
     assert datetime.fromisoformat(primary["quota_resets_at"]) == next_quota_reset(now)
     assert body["scheduler_running"] is True
     assert datetime.fromisoformat(body["next_fetch_at"]) == next_fetch
+
+
+def test_queue_status_needs_the_admin_key(client: TestClient) -> None:
+    assert client.get("/api/queue/status").status_code == 401

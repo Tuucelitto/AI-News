@@ -71,7 +71,8 @@ class Article(SQLModel, table=True):
     published_at: datetime | None = Field(default=None, index=True, sa_type=UTCDateTime)
     rss_summary: str | None = None
 
-    # Extracted full text. Used only as summarizer input, never exposed by the API.
+    # Extracted full text. Only kept while the article waits for a summary, then deleted;
+    # never exposed by the API.
     content: str | None = None
     content_length: int = 0
 

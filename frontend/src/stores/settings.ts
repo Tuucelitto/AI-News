@@ -3,30 +3,13 @@ import { computed, ref, watch } from 'vue'
 
 import { api } from '@/api/client'
 import { errorMessage } from '@/utils/errors'
+import { readStorage, writeStorage } from '@/utils/storage'
 
 const ADMIN_KEY_STORAGE = 'ai-news:admin-key'
 const THEME_STORAGE = 'ai-news:theme' // also read by the inline script in index.html
 
 export type Theme = 'system' | 'light' | 'dark'
 const THEMES: Theme[] = ['system', 'light', 'dark']
-
-// localStorage can throw (private mode, blocked storage); the app must still work without it.
-function readStorage(key: string): string | null {
-  try {
-    return localStorage.getItem(key)
-  } catch {
-    return null
-  }
-}
-
-function writeStorage(key: string, value: string): void {
-  try {
-    if (value) localStorage.setItem(key, value)
-    else localStorage.removeItem(key)
-  } catch {
-    // Not persisted; the value stays in memory for this tab.
-  }
-}
 
 function systemPrefersDark(): boolean {
   return window.matchMedia?.('(prefers-color-scheme: dark)').matches ?? false

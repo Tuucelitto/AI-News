@@ -217,6 +217,7 @@ class QueueWorker:
         if permanent or article.summary_attempts >= self.max_attempts:
             article.summary_status = SummaryStatus.FAILED
             article.next_attempt_at = None
+            article.content = None  # a manual retry downloads it again
             result.failed += 1
         else:
             article.summary_status = SummaryStatus.PENDING
@@ -231,6 +232,7 @@ class QueueWorker:
         article.model_used = model
         article.summarized_at = now
         article.summary_status = SummaryStatus.DONE
+        article.content = None  # we keep our summary, not a copy of the publisher's text
         article.summary_error = None
         article.next_attempt_at = None
 

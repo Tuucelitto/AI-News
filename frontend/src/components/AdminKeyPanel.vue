@@ -27,11 +27,8 @@ async function save() {
     </div>
 
     <form v-else class="space-y-2" @submit.prevent="save">
-      <p class="text-gray-600 dark:text-gray-400">
-        Değişiklik yapmak için yönetici anahtarını gir. Anahtar,
-        <code class="text-xs">backend/.env</code> dosyasındaki
-        <code class="text-xs">ADMIN_API_KEY</code>
-        değeridir ve sadece bu tarayıcıda saklanır.
+      <p class="text-stone-600 dark:text-stone-400">
+        Değişiklik yapmak için yönetici anahtarını giriniz.
       </p>
       <div class="flex gap-2">
         <input

@@ -87,6 +87,6 @@ describe('api client', () => {
   it('turns network failures into ApiError with status 0', async () => {
     fetchMock.mockRejectedValue(new TypeError('Failed to fetch'))
 
-    await expect(api.queueStatus()).rejects.toMatchObject({ name: 'ApiError', status: 0 })
+    await expect(api.queueStatus('key')).rejects.toMatchObject({ name: 'ApiError', status: 0 })
   })
 })

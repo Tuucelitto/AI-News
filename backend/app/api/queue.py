@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Request
 from sqlmodel import col, func, select
 
-from app.api.deps import SessionDep
+from app.api.deps import AdminDep, SessionDep
 from app.config import settings
 from app.models import Article, Feed, SummaryStatus, utc_now
 from app.scheduler import FETCH_JOB_ID, BackgroundJobs
@@ -11,7 +11,7 @@ from app.services.rate_limiter import RateLimiter, next_quota_reset
 router = APIRouter(prefix="/queue", tags=["queue"])
 
 
-@router.get("/status")
+@router.get("/status", dependencies=[AdminDep])
 def queue_status(request: Request, session: SessionDep) -> QueueStatus:
     now = utc_now()
     jobs: BackgroundJobs | None = getattr(request.app.state, "jobs", None)

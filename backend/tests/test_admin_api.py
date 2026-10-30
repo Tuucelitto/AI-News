@@ -206,6 +206,7 @@ def test_resummarize_puts_article_back_in_queue(
     article.summary_status = SummaryStatus.FAILED
     article.summary_attempts = 5
     article.summary_error = "Prompt blocked"
+    article.rss_summary = "Long enough to summarize. " * 30  # the page itself returns 404
     session.commit()
 
     response = client.post(f"/api/articles/{article.id}/resummarize", headers=ADMIN)
@@ -214,6 +215,22 @@ def test_resummarize_puts_article_back_in_queue(
     assert response.json()["summary_status"] == "pending"
     session.refresh(article)
     assert (article.summary_attempts, article.summary_error) == (0, None)
+    assert article.content == article.rss_summary
+
+
+def test_resummarize_keeps_the_article_when_its_text_is_unavailable(
+    client: TestClient, session: Session, feed: Feed
+) -> None:
+    article = session.exec(select(Article)).one()
+    article.summary_status = SummaryStatus.DONE
+    article.summary_tr = "Mevcut özet"
+    session.commit()
+
+    response = client.post(f"/api/articles/{article.id}/resummarize", headers=ADMIN)
+
+    assert response.status_code == 502
+    session.refresh(article)
+    assert (article.summary_status, article.summary_tr) == (SummaryStatus.DONE, "Mevcut özet")
 
 
 @pytest.mark.parametrize("status", [SummaryStatus.PENDING, SummaryStatus.PROCESSING])

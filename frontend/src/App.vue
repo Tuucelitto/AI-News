@@ -1,16 +1,25 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import { RouterLink, RouterView, useRoute } from 'vue-router'
 
 import ThemeToggle from '@/components/ThemeToggle.vue'
+import { useSettingsStore } from '@/stores/settings'
+import { formatToday } from '@/utils/format'
 
 const route = useRoute()
+const settings = useSettingsStore()
+const today = formatToday()
 
 const links = [
   // "Haberler" stays highlighted on an article page too.
   { to: '/', label: 'Haberler', routes: ['home', 'article'] },
+  { to: '/favoriler', label: 'Favoriler', routes: ['favorites'] },
   { to: '/feeds', label: 'Kaynaklar', routes: ['feeds'] },
-  { to: '/status', label: 'Durum', routes: ['status'] },
 ]
+// Only the owner sees the status dashboard.
+const visibleLinks = computed(() =>
+  settings.hasAdminKey ? [...links, { to: '/status', label: 'Durum', routes: ['status'] }] : links,
+)
 
 // Computed here instead of Vue Router's active-class: adding an active color on top of
 // the normal color would leave two conflicting Tailwind color classes on one element.
@@ -20,27 +29,30 @@ function isActive(link: (typeof links)[number]): boolean {
 </script>
 
 <template>
-  <div class="min-h-screen bg-gray-50 text-gray-900 dark:bg-gray-950 dark:text-gray-100">
-    <header class="border-b border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
-      <div class="mx-auto flex max-w-4xl items-center justify-between gap-4 px-4 py-3">
-        <nav class="flex items-center gap-4 sm:gap-6">
-          <!-- Muted like the inactive links, so only the current page stands out. -->
+  <div
+    class="flex min-h-screen flex-col bg-paper text-stone-900 dark:bg-stone-950 dark:text-stone-100"
+  >
+    <header class="mx-auto w-full max-w-6xl px-4 pt-5 sm:px-6">
+      <div
+        class="flex items-center justify-between gap-4 border-b-2 border-stone-900 pb-3 dark:border-stone-100"
+      >
+        <nav class="flex flex-wrap items-baseline gap-x-8 gap-y-1">
           <RouterLink
             to="/"
-            class="font-semibold text-gray-500 transition-colors hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
+            class="font-serif text-3xl font-semibold tracking-tight transition-colors hover:text-accent dark:hover:text-accent-bright"
           >
             AI Haberleri
           </RouterLink>
-          <div class="flex gap-1 text-sm">
+          <div class="flex gap-5 text-sm">
             <RouterLink
-              v-for="link in links"
+              v-for="link in visibleLinks"
               :key="link.to"
               :to="link.to"
-              class="rounded-md px-2.5 py-1 transition-colors"
+              class="border-b-2 py-0.5 transition-colors"
               :class="
                 isActive(link)
-                  ? 'bg-gray-100 font-medium text-gray-900 dark:bg-gray-800 dark:text-white'
-                  : 'text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white'
+                  ? 'border-accent font-medium text-stone-900 dark:border-accent-bright dark:text-white'
+                  : 'border-transparent text-stone-500 hover:text-stone-900 dark:text-stone-400 dark:hover:text-white'
               "
               :aria-current="isActive(link) ? 'page' : undefined"
             >
@@ -48,12 +60,23 @@ function isActive(link: (typeof links)[number]): boolean {
             </RouterLink>
           </div>
         </nav>
-        <ThemeToggle />
+        <div class="flex shrink-0 items-center gap-4">
+          <p class="hidden text-sm text-stone-500 md:block dark:text-stone-400">{{ today }}</p>
+          <ThemeToggle />
+        </div>
       </div>
     </header>
 
-    <main class="mx-auto max-w-4xl px-4 py-6">
+    <main class="mx-auto w-full max-w-6xl flex-1 px-4 py-6 sm:px-6">
       <RouterView />
     </main>
+
+    <footer class="mx-auto w-full max-w-6xl px-4 pb-6 sm:px-6">
+      <p
+        class="border-t border-stone-300 pt-3 text-xs text-stone-500 dark:border-stone-700 dark:text-stone-400"
+      >
+        Özetler yapay zekâ ile oluşturulur ve hata içerebilir.
+      </p>
+    </footer>
   </div>
 </template>

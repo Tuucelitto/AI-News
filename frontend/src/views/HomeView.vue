@@ -97,6 +97,13 @@ function onFeedChange(event: Event) {
   updateFilters({ feed: Number((event.target as HTMLSelectElement).value) || undefined })
 }
 
+// The newest story leads the first page; the rest fill the grid below it.
+const lead = computed(() => {
+  const page = articles.page
+  return page?.page === 1 ? page.items[0] : undefined
+})
+const grid = computed(() => articles.page?.items.slice(lead.value ? 1 : 0) ?? [])
+
 function onPageChange(page: number) {
   updateFilters({ page })
   window.scrollTo({ top: 0 })
@@ -104,37 +111,44 @@ function onPageChange(page: number) {
 </script>
 
 <template>
-  <div class="mb-5 space-y-3">
-    <div class="flex flex-wrap gap-2" role="group" aria-label="Zaman aralığı">
+  <div class="mb-6 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+    <div
+      class="flex flex-wrap items-center gap-x-5 gap-y-1"
+      role="group"
+      aria-label="Zaman aralığı"
+    >
       <button
         v-for="range in RANGES"
         :key="range.value"
         type="button"
-        class="rounded-full border px-3 py-1 text-sm"
+        class="border-b-2 py-0.5 text-sm transition-colors"
         :class="
           filters.range === range.value
-            ? 'border-gray-900 bg-gray-900 text-white dark:border-gray-100 dark:bg-gray-100 dark:text-gray-900'
-            : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:bg-gray-800'
+            ? 'border-accent font-medium text-stone-900 dark:border-accent-bright dark:text-white'
+            : 'border-transparent text-stone-500 hover:text-stone-900 dark:text-stone-400 dark:hover:text-white'
         "
         :aria-pressed="filters.range === range.value"
         @click="updateFilters({ range: range.value })"
       >
         {{ range.label }}
       </button>
+      <p v-if="articles.page" class="text-sm text-stone-400 dark:text-stone-500" aria-live="polite">
+        {{ articles.page.total }} haber
+      </p>
     </div>
 
-    <div class="flex flex-col gap-2 sm:flex-row">
+    <div class="flex flex-col gap-2 sm:flex-row lg:w-[28rem]">
       <input
         v-model="searchText"
         type="search"
         placeholder="Haberlerde ara…"
         aria-label="Haberlerde ara"
-        class="input-field flex-1"
+        class="input-field min-w-0 flex-1"
       />
       <select
         :value="filters.feedId ?? ''"
         aria-label="Kaynak"
-        class="input-field"
+        class="input-field sm:w-44"
         @change="onFeedChange"
       >
         <option value="">Tüm kaynaklar</option>
@@ -147,29 +161,31 @@ function onPageChange(page: number) {
 
   <ErrorMessage v-if="articles.error" :message="articles.error" @retry="load" />
 
-  <div v-else-if="articles.loading && !articles.page" class="space-y-3" aria-busy="true">
-    <div
-      v-for="i in 5"
-      :key="i"
-      class="h-28 animate-pulse rounded-lg bg-gray-200 dark:bg-gray-800"
-    />
+  <div v-else-if="articles.loading && !articles.page" aria-busy="true">
+    <div class="mb-8 h-56 animate-pulse rounded-md bg-stone-200 dark:bg-stone-800" />
+    <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      <div
+        v-for="i in 6"
+        :key="i"
+        class="h-40 animate-pulse rounded-md bg-stone-200 dark:bg-stone-800"
+      />
+    </div>
   </div>
 
   <template v-else-if="articles.page">
-    <p class="mb-3 text-sm text-gray-500 dark:text-gray-400" aria-live="polite">
-      {{ articles.page.total }} haber
-    </p>
-
     <p
       v-if="articles.page.items.length === 0"
-      class="rounded-lg border border-dashed border-gray-300 p-8 text-center text-gray-600 dark:border-gray-700 dark:text-gray-400"
+      class="rounded-md border border-dashed border-stone-300 p-8 text-center text-stone-600 dark:border-stone-700 dark:text-stone-400"
     >
       Bu filtrelere uyan haber yok.
     </p>
 
     <!-- Dimmed while a new page loads, instead of flashing skeletons again. -->
-    <div class="space-y-3 transition-opacity" :class="{ 'opacity-50': articles.loading }">
-      <ArticleCard v-for="article in articles.page.items" :key="article.id" :article="article" />
+    <div class="transition-opacity" :class="{ 'opacity-50': articles.loading }">
+      <ArticleCard v-if="lead" :article="lead" lead class="mb-8" />
+      <div class="grid gap-x-8 gap-y-6 md:grid-cols-2 lg:grid-cols-3">
+        <ArticleCard v-for="article in grid" :key="article.id" :article="article" />
+      </div>
     </div>
 
     <PaginationNav

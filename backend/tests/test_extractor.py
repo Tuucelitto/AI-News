@@ -89,7 +89,7 @@ def test_failed_download_falls_back_to_rss_summary(session: Session) -> None:
 
     run(session)
 
-    assert article.content == "Short RSS description."
+    assert article.content is None  # skipped: nothing to keep the text for
     assert article.content_length == len("Short RSS description.")
     assert article.summary_status == SummaryStatus.SKIPPED
 

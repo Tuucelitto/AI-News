@@ -6,6 +6,7 @@ const DETAILS: Record<string, string> = {
   'URL is not a valid RSS/Atom feed': 'Bu adres geçerli bir RSS/Atom kaynağı değil.',
   'Feed not found': 'Kaynak bulunamadı.',
   'Article not found': 'Haber bulunamadı.',
+  'Article text unavailable': 'Haberin metni kaynaktan yeniden alınamadı; mevcut özet korundu.',
 }
 
 /** A Turkish, user-facing message for any error thrown by the API client. */

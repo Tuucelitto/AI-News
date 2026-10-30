@@ -6,7 +6,7 @@ defineEmits<{ retry: [] }>()
 <template>
   <div
     role="alert"
-    class="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800 dark:border-red-900 dark:bg-red-950 dark:text-red-300"
+    class="rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-800 dark:border-red-900 dark:bg-red-950 dark:text-red-300"
   >
     <p class="font-medium">Bir sorun oluştu.</p>
     <p class="mt-1 text-red-700 dark:text-red-400">{{ message }}</p>

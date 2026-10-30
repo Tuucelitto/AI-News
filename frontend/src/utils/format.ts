@@ -23,6 +23,11 @@ export function formatRelative(iso: string, now: Date = new Date()): string {
   return 'az önce'
 }
 
+/** "30 Ekim 2026 Cuma", for the masthead. */
+export function formatToday(now: Date = new Date()): string {
+  return new Intl.DateTimeFormat('tr-TR', { dateStyle: 'full' }).format(now)
+}
+
 /** "29 Ekim 2026 22:56" in the viewer's time zone (or the given one, for tests). */
 export function formatDate(iso: string, timeZone?: string): string {
   return new Intl.DateTimeFormat('tr-TR', {

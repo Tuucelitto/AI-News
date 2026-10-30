@@ -151,6 +151,8 @@ SQLite + thread'ler için: `check_same_thread=False`, **WAL modu** (okuma/yazma 
 ### 3.7 Telif ve etik
 
 - Arayüzde tam metin **gösterilmez**; sadece özet + orijinal habere bağlantı + kaynak adı.
+- Tam metin yalnızca özet beklerken tutulur; özet bitince, kalıcı hatada veya haber kısaysa sunucudan silinir
+  (`secure_delete=ON`). Yeniden özetleme metni kaynaktan tekrar indirir.
 - Çekme isteklerinde tanımlayıcı bir `User-Agent` kullanılır, kaynaklar makul aralıklarla çekilir.
 - RSS için `ETag` / `Last-Modified` saklanır → değişmeyen feed tekrar indirilmez.
 
@@ -393,7 +395,8 @@ Her adım küçük, kendi başına çalışır ve commit'lenebilir. Her adımın
 | Hangi RSS kaynakları? | ✅ 7 kaynak `backend/sources.yaml` içinde; `scripts.check_sources` ile doğrulandı |
 | OpenAI (~1300) ve Hugging Face (~900) feed'leri tüm arşivi içeriyor | ✅ Sadece son 48 saatte yayımlanan haberler alınır (`FETCH_MAX_AGE_HOURS=48`, kesinti payı olarak); arayüz varsayılan olarak son 24 saati gösterir, eski haberler DB'de kalır |
 | Python paket yöneticisi (uv / pip) | ✅ uv seçildi |
-| Deploy edilecek mi? | Faz 4'te karar (Render/Fly.io + statik frontend gibi) |
+| Deploy edilecek mi? | ⏸ 30 Ekim'de ertelendi: uygulama şimdilik yalnızca yerelde çalışır |
+| Kaynakların şartları | 30 Ekim kontrolü: OpenAI, DeepMind, Hugging Face'te `robots.txt` açık. TechCrunch, MIT Technology Review ve Condé Nast (Ars Technica) şartları scraping'i kısıtlıyor; Vox Media ve OpenAI şartları okunamadı. Canlıya alınırsa önce kaynak kararı verilmeli |
 
 ---
 

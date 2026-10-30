@@ -58,11 +58,11 @@ const remove = () =>
   <li class="card p-4" :class="{ 'opacity-60': !feed.is_active }">
     <div class="flex flex-wrap items-start justify-between gap-2">
       <div class="min-w-0">
-        <h3 class="font-semibold">
+        <h3 class="font-serif text-xl font-medium">
           {{ feed.name }}
           <span
             v-if="!feed.is_active"
-            class="ml-1 rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600 dark:bg-gray-800 dark:text-gray-400"
+            class="ml-1 rounded-full bg-stone-100 px-2 py-0.5 text-xs font-medium text-stone-600 dark:bg-stone-800 dark:text-stone-400"
           >
             Pasif
           </span>
@@ -71,11 +71,11 @@ const remove = () =>
           :href="feed.url"
           target="_blank"
           rel="noopener noreferrer"
-          class="block truncate text-xs text-gray-500 hover:underline dark:text-gray-400"
+          class="block truncate text-xs text-stone-500 hover:underline dark:text-stone-400"
         >
           {{ feed.url }}
         </a>
-        <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+        <p class="mt-1 text-sm text-stone-600 dark:text-stone-400">
           {{ feed.article_count }} haber
           <template v-if="feed.last_fetched_at">
             · son çekme

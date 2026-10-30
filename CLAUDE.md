@@ -53,6 +53,10 @@ npm run lint:check && npm run format:check   # what CI runs: check only, never -
   `lsof -nP -iTCP -sTCP:LISTEN | grep python`; use `SCHEDULER_ENABLED=false` for API-only runs.
 - Background jobs are synchronous and run in threads; each job opens its own DB session. SQLite runs in WAL mode.
 - API responses use dedicated read schemas; never expose `Article.content` (full extracted text) to the client.
+- `Article.content` is temporary: it is deleted when an article is done, failed or skipped, so a summary request
+  must never rely on it being there later. `resummarize` downloads the text again. SQLite runs with `secure_delete=ON`.
+- The status dashboard is admin-only: `/api/queue/status` needs `AdminDep`, the route uses `meta.requiresAdmin`.
+- Favorites live in `localStorage` (`stores/favorites.ts`): no accounts, nothing stored on the server.
 - Every write endpoint (POST/PATCH/PUT/DELETE) must declare `dependencies=[AdminDep]`; `test_admin_api.py` fails otherwise.
 - `sources.yaml` only seeds an empty database. After that, feeds are managed through the API.
 - **Schema changes need an Alembic migration** (`backend/migrations/versions/`). Never delete the database to change

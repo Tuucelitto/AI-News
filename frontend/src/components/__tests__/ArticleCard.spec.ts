@@ -1,4 +1,5 @@
 import { mount } from '@vue/test-utils'
+import { createPinia } from 'pinia'
 import { describe, expect, it } from 'vitest'
 
 import { makeListItem, testRouter } from '@/__tests__/helpers'
@@ -6,7 +7,10 @@ import ArticleCard from '@/components/ArticleCard.vue'
 import type { ArticleListItem } from '@/types/api'
 
 function mountCard(article: ArticleListItem) {
-  return mount(ArticleCard, { props: { article }, global: { plugins: [testRouter()] } })
+  return mount(ArticleCard, {
+    props: { article },
+    global: { plugins: [testRouter(), createPinia()] },
+  })
 }
 
 describe('ArticleCard', () => {

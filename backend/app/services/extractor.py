@@ -44,11 +44,14 @@ def process_article(
     # Keep the longest text we have: the extracted page, the full text embedded in the
     # feed (stored in `content` at fetch time) or the short RSS description.
     candidates = [t for t in (text, article.content, article.rss_summary) if t]
-    article.content = max(candidates, key=len, default=None)
-    article.content_length = len(article.content or "")
-    article.summary_status = (
-        SummaryStatus.PENDING if article.content_length >= min_chars else SummaryStatus.SKIPPED
-    )
+    longest = max(candidates, key=len, default=None)
+    article.content_length = len(longest or "")
+    if article.content_length >= min_chars:
+        article.content = longest
+        article.summary_status = SummaryStatus.PENDING
+    else:
+        article.content = None  # no summary coming, so no reason to keep the text
+        article.summary_status = SummaryStatus.SKIPPED
     session.add(article)
     session.commit()  # per article, so an interruption does not lose finished work
 

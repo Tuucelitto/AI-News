@@ -27,7 +27,7 @@ interface RequestOptions {
   method?: 'GET' | 'POST' | 'PATCH' | 'DELETE'
   query?: Record<string, QueryValue>
   body?: unknown
-  adminKey?: string // required by every write endpoint (X-Admin-Key header)
+  adminKey?: string // required by write endpoints and the status dashboard (X-Admin-Key header)
 }
 
 async function errorMessage(response: Response): Promise<string> {
@@ -90,7 +90,7 @@ export const api = {
   refreshFeed: (id: number, adminKey: string) =>
     request<FeedRefreshResult>(`/feeds/${id}/refresh`, { method: 'POST', adminKey }),
 
-  queueStatus: () => request<QueueStatus>('/queue/status'),
+  queueStatus: (adminKey: string) => request<QueueStatus>('/queue/status', { adminKey }),
 
   checkAdminKey: (adminKey: string) => request<void>('/admin/check', { adminKey }),
 }

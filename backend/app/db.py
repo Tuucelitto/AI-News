@@ -19,6 +19,8 @@ def configure_sqlite_connection(dbapi_connection, _connection_record) -> None:
     cursor.execute("PRAGMA journal_mode=WAL")
     # SQLite ignores foreign keys unless enabled per connection.
     cursor.execute("PRAGMA foreign_keys=ON")
+    # Overwrites deleted data with zeros, so a removed article text really leaves the file.
+    cursor.execute("PRAGMA secure_delete=ON")
     cursor.close()
     # Makes the Python function callable from SQL as search_fold(column).
     dbapi_connection.create_function("search_fold", 1, search_fold, deterministic=True)
@@ -48,6 +50,10 @@ engine = build_engine(settings.database_url)
 BACKEND_DIR = Path(__file__).resolve().parent.parent
 
 
+# Databases older than migrations match this schema; later migrations still run on them.
+FIRST_REVISION = "c05a5421cbe3"
+
+
 def alembic_config() -> Config:
     config = Config(str(BACKEND_DIR / "alembic.ini"))
     config.set_main_option("script_location", str(BACKEND_DIR / "migrations"))
@@ -65,7 +71,7 @@ def init_db(target: Engine = engine) -> None:
         if app_tables and not has_revision:
             # A database created with create_all before migrations existed: its schema
             # matches the first migration, so mark it as migrated instead of recreating it.
-            command.stamp(config, "head")
+            command.stamp(config, FIRST_REVISION)
         command.upgrade(config, "head")
 
 

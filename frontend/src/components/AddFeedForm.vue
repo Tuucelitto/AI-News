@@ -35,7 +35,7 @@ async function submit() {
 
 <template>
   <form class="card mb-6 space-y-2 p-4" @submit.prevent="submit">
-    <h2 class="font-semibold">Kaynak ekle</h2>
+    <h2 class="font-serif text-xl font-medium">Kaynak ekle</h2>
     <div class="flex flex-col gap-2 sm:flex-row">
       <input
         v-model="url"

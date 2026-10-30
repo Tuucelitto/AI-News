@@ -16,7 +16,7 @@ const pageCount = computed(() => Math.max(1, Math.ceil(props.total / props.size)
     <button type="button" class="btn" :disabled="page <= 1" @click="emit('update:page', page - 1)">
       ← Önceki
     </button>
-    <span class="text-gray-600 dark:text-gray-400">Sayfa {{ page }} / {{ pageCount }}</span>
+    <span class="text-stone-600 dark:text-stone-400">Sayfa {{ page }} / {{ pageCount }}</span>
     <button
       type="button"
       class="btn"

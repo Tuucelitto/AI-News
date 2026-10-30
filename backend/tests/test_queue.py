@@ -79,6 +79,7 @@ def test_successful_batch_is_saved(session: Session) -> None:
         assert article.key_points == ["Nokta"]
         assert article.model_used == "flash"
         assert article.summarized_at == NOW
+        assert article.content is None  # the publisher's full text is not kept
     assert worker.primary.limiter.requests_today(session, NOW) == 1
 
 
@@ -134,6 +135,7 @@ def test_article_fails_after_max_attempts(session: Session) -> None:
     assert article.summary_status == SummaryStatus.FAILED
     assert article.summary_attempts == 3
     assert article.summary_error == "Missing from model response"
+    assert article.content is None
 
 
 def test_transient_error_pauses_model_without_counting_attempts(session: Session) -> None:
@@ -146,6 +148,7 @@ def test_transient_error_pauses_model_without_counting_attempts(session: Session
     for article in articles:
         assert article.summary_status == SummaryStatus.PENDING
         assert article.summary_attempts == 0
+        assert article.content == "Some text."  # needed for the next attempt
     assert worker.primary.paused_until == NOW + timedelta(minutes=1)
     # The failed request still counts against the daily quota.
     assert worker.primary.limiter.requests_today(session, NOW) == 1

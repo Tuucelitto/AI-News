@@ -38,6 +38,7 @@ export type ArticleQuery = {
   status?: SummaryStatus
   q?: string
   since_hours?: number
+  ids?: string // comma-separated article ids
 }
 
 export interface Feed {

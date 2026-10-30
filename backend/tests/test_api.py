@@ -81,6 +81,18 @@ def test_full_text_is_never_returned(client: TestClient, data) -> None:
     assert "content" not in detail
 
 
+def test_filter_by_ids(client: TestClient, data) -> None:
+    ids = f"{data['summarized']},{data['old']},999"
+
+    response = client.get("/api/articles", params={"ids": ids})
+
+    assert titles(response) == ["A new model", "An older story"]
+
+
+def test_ids_filter_rejects_anything_but_numbers(client: TestClient, data) -> None:
+    assert client.get("/api/articles", params={"ids": "1,x"}).status_code == 422
+
+
 def test_pagination(client: TestClient, data) -> None:
     response = client.get("/api/articles", params={"page": 2, "size": 2})
 

@@ -7,10 +7,12 @@ from sqlalchemy import String
 from sqlalchemy.orm import defer
 from sqlmodel import col, func, or_, select
 
-from app.api.deps import AdminDep, SessionDep
+from app.api.deps import AdminDep, HttpClientDep, SessionDep
+from app.config import settings
 from app.models import Article, Feed, SummaryStatus, utc_now
 from app.schemas import ArticleDetail, ArticleListItem, Page
 from app.search import search_fold
+from app.services.extractor import process_article
 
 router = APIRouter(prefix="/articles", tags=["articles"])
 
@@ -26,6 +28,7 @@ def list_articles(
     status: SummaryStatus | None = None,
     q: Annotated[str | None, Query(min_length=2, max_length=100)] = None,
     since_hours: Annotated[int | None, Query(ge=1, le=24 * 30)] = None,
+    ids: Annotated[str | None, Query(pattern=r"^\d+(,\d+)*$", max_length=1000)] = None,
 ) -> Page[ArticleListItem]:
     """Articles, newest first."""
     filters = []
@@ -33,6 +36,8 @@ def list_articles(
         filters.append(Article.feed_id == feed_id)
     if status is not None:
         filters.append(Article.summary_status == status)
+    if ids is not None:  # comma-separated: the reader's favorites
+        filters.append(col(Article.id).in_([int(i) for i in ids.split(",")]))
     if since_hours is not None:
         filters.append(col(Article.published_at) >= utc_now() - timedelta(hours=since_hours))
     if q:
@@ -73,8 +78,10 @@ def list_articles(
 
 
 @router.post("/{article_id}/resummarize", dependencies=[AdminDep])
-def resummarize_article(article_id: int, session: SessionDep) -> ArticleDetail:
-    """Put a finished, failed or skipped article back into the summary queue."""
+def resummarize_article(
+    article_id: int, session: SessionDep, http_client: HttpClientDep
+) -> ArticleDetail:
+    """Download a finished, failed or skipped article again and queue it for a summary."""
     article = session.get(Article, article_id)
     if article is None:
         raise HTTPException(http_status.HTTP_404_NOT_FOUND, "Article not found")
@@ -84,7 +91,15 @@ def resummarize_article(article_id: int, session: SessionDep) -> ArticleDetail:
             f"Article is {article.summary_status.value}, not finished",
         )
 
-    article.summary_status = SummaryStatus.PENDING
+    previous_status = article.summary_status
+    process_article(http_client, session, article, settings.summary_min_chars)
+    if article.summary_status != SummaryStatus.PENDING:
+        # Without the full text, a new summary would be worse than the current one.
+        article.summary_status = previous_status
+        session.add(article)
+        session.commit()
+        raise HTTPException(http_status.HTTP_502_BAD_GATEWAY, "Article text unavailable")
+
     article.summary_attempts = 0
     article.summary_error = None
     article.next_attempt_at = None

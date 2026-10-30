@@ -1,3 +1,5 @@
+import '@fontsource-variable/inter'
+import '@fontsource-variable/newsreader/opsz.css'
 import './assets/main.css'
 
 import { createPinia } from 'pinia'

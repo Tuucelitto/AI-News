@@ -61,6 +61,40 @@ def test_existing_database_is_adopted_without_losing_data(engine: Engine) -> Non
         assert connection.execute(text("SELECT name FROM feed")).scalar_one() == "A"
 
 
+def test_finished_articles_lose_their_full_text(engine: Engine) -> None:
+    # A database from before migrations: adopted at the first revision, then upgraded.
+    create_tables(engine)
+    with engine.begin() as connection:
+        connection.execute(
+            text(
+                "INSERT INTO feed (id, name, url, is_active, created_at)"
+                " VALUES (1, 'A', 'u', 1, '2026-01-01')"
+            )
+        )
+        for index, status in enumerate(("DONE", "FAILED", "SKIPPED", "PENDING")):
+            connection.execute(
+                text(
+                    "INSERT INTO article (feed_id, guid, url, title, content, content_length,"
+                    " summary_status, summary_attempts, created_at)"
+                    " VALUES (1, :g, :g, 't', 'text', 4, :s, 0, '2026-01-01')"
+                ),
+                {"g": str(index), "s": status},
+            )
+
+    init_db(engine)
+
+    with engine.connect() as connection:
+        kept = connection.execute(
+            text("SELECT summary_status FROM article WHERE content IS NOT NULL")
+        ).scalars()
+        assert list(kept) == ["PENDING"]
+
+
+def test_deleted_text_is_overwritten_in_the_file(engine: Engine) -> None:
+    with engine.connect() as connection:
+        assert connection.execute(text("PRAGMA secure_delete")).scalar_one() == 1
+
+
 def test_init_db_can_run_repeatedly(engine: Engine) -> None:
     init_db(engine)
     init_db(engine)  # every app start calls it

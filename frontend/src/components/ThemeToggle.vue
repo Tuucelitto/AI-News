@@ -31,12 +31,12 @@ function onKeydown(event: KeyboardEvent) {
   <div
     role="radiogroup"
     aria-label="Tema"
-    class="relative flex rounded-full bg-gray-100 p-0.5 dark:bg-gray-800"
+    class="relative flex rounded-full bg-stone-100 p-0.5 dark:bg-stone-800"
     @keydown="onKeydown"
   >
     <span
       aria-hidden="true"
-      class="absolute top-0.5 left-0.5 h-7 w-8 rounded-full bg-white shadow-sm transition-transform duration-200 ease-out dark:bg-gray-600"
+      class="absolute top-0.5 left-0.5 h-7 w-8 rounded-full bg-white shadow-sm transition-transform duration-200 ease-out dark:bg-stone-600"
       :style="{ transform: `translateX(${selectedIndex * 100}%)` }"
     />
     <button
@@ -52,8 +52,8 @@ function onKeydown(event: KeyboardEvent) {
       class="relative z-10 flex h-7 w-8 items-center justify-center rounded-full transition-colors"
       :class="
         settings.theme === option.value
-          ? 'text-gray-900 dark:text-white'
-          : 'text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white'
+          ? 'text-stone-900 dark:text-white'
+          : 'text-stone-500 hover:text-stone-900 dark:text-stone-400 dark:hover:text-white'
       "
       @click="settings.setTheme(option.value)"
     >

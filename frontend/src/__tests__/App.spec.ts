@@ -1,27 +1,33 @@
 import { flushPromises, mount } from '@vue/test-utils'
-import { createPinia } from 'pinia'
+import { createPinia, setActivePinia } from 'pinia'
 import { describe, expect, it } from 'vitest'
 import { h } from 'vue'
 import { createMemoryHistory, createRouter } from 'vue-router'
+
+import { useSettingsStore } from '@/stores/settings'
 
 import App from '../App.vue'
 
 // Stub pages, so this test checks the layout without loading real views or calling the API.
 const stub = (text: string) => ({ render: () => h('p', text) })
 
-async function mountAt(path: string) {
+async function mountAt(path: string, { admin = true } = {}) {
+  const pinia = createPinia()
+  setActivePinia(pinia)
+  useSettingsStore().adminKey = admin ? 'key' : ''
   const router = createRouter({
     history: createMemoryHistory(),
     routes: [
       { path: '/', name: 'home', component: stub('home page') },
       { path: '/articles/:id', name: 'article', component: stub('article page') },
+      { path: '/favoriler', name: 'favorites', component: stub('favorites page') },
       { path: '/feeds', name: 'feeds', component: stub('feeds page') },
       { path: '/status', name: 'status', component: stub('status page') },
     ],
   })
   router.push(path)
   await router.isReady()
-  const wrapper = mount(App, { global: { plugins: [router, createPinia()] } })
+  const wrapper = mount(App, { global: { plugins: [router, pinia] } })
   return { wrapper, router }
 }
 
@@ -34,8 +40,15 @@ describe('App', () => {
     const { wrapper } = await mountAt('/feeds')
 
     const links = wrapper.findAll('nav a').map((a) => a.text())
-    expect(links).toEqual(['AI Haberleri', 'Haberler', 'Kaynaklar', 'Durum'])
+    expect(links).toEqual(['AI Haberleri', 'Haberler', 'Favoriler', 'Kaynaklar', 'Durum'])
     expect(wrapper.text()).toContain('feeds page')
+  })
+
+  it('hides the status page from visitors', async () => {
+    const { wrapper } = await mountAt('/feeds', { admin: false })
+
+    const links = wrapper.findAll('nav a').map((a) => a.text())
+    expect(links).toEqual(['AI Haberleri', 'Haberler', 'Favoriler', 'Kaynaklar'])
   })
 
   it('highlights only the link of the current page', async () => {
